@@ -1,0 +1,12 @@
+{
+ "http_services": [
+  {"id": "0", "name": "Disabled", "key_visible": false, "grp_visible": false, "url_visible": false},
+  {"id": "1", "name": "Thingspeak", "key_visible": true, "grp_visible": false, "url_visible": false},
+  {"id": "2", "name": "Adafruit IO", "key_visible": true, "grp_visible": true, "url_visible": false},
+  {"id": "255", "name": "Custom URL", "key_visible": false,"grp_visible": false, "url_visible": true}
+ ],
+ "mqtt_services": [
+  {"id": "0", "name": "Disabled", "settings_visible": false},
+  {"id": "1", "name": "Enabled", "settings_visible": true}
+ ]
+}

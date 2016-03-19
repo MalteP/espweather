@@ -1,0 +1,220 @@
+body 
+ {
+  background-color: #e0ffff;
+  background: linear-gradient(175deg, #e0ffff, #00bfff);
+  background-attachment: fixed;
+  font-family: sans-serif;
+ }
+
+a
+ {
+  font-family: sans-serif;
+  color: #000000;
+ }
+
+pre, pre > a
+ {
+  font-family: monospace;
+ }
+
+#main
+ {
+  width: 90%;
+  height: 100%;
+  margin-left: auto;
+  margin-right: auto;
+ }
+
+#main-head
+ {
+  padding: 5px 25px;
+  min-width: 625px;
+ }
+
+.main-header
+ {
+  display: inline;
+ }
+
+p.main-header
+ {
+  float: right;
+ }
+
+#main-inner
+ {
+  border-radius: 25px;
+  background: #ffffff;
+  opacity: 0.9;
+  border: 2px solid #8AC007;
+  min-height: 90%;
+  min-width: 625px;
+  padding: 0px 20px 20px; 0px;
+  position: relative;
+ }
+
+#main-menu
+ {
+  width: 225px;
+  float: left;
+ }
+
+#main-content
+ {
+  overflow: auto;
+  min-height: 400px;
+ }
+
+#main-buttons
+ {
+  clear: both;
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  display: none;
+ }
+
+#main-bottom
+ {
+  height: 10px;
+ }
+
+#tab-user, #tab-network, #tab-sensor, #tab-system
+ {
+  float: left;
+  display: none;
+ }
+
+.menu-btn
+ {
+  margin-top: 25px;
+  width: 200px;
+  background: #fafafa;
+  border: 2px solid #8AC007;
+ }
+
+.save-btn
+ {
+  padding: 0px 5px 0px 5px;
+ }
+
+.btn, .grn-border
+ {
+  border-radius: 15px;
+  background: #fafafa;
+  border: 2px solid #8AC007;
+ }
+
+.btn > p
+ {
+  margin: 10px;
+  text-decoration: underline;
+  cursor: pointer;
+ }
+
+.weather-value
+ {
+  font-size: 2em;
+ }
+
+#networks
+ {
+  width: 350px;
+  max-height: 200px;
+  overflow-y: auto;
+ }
+
+#networks-table
+ {
+  display: table;
+  width: 100%;
+ }
+
+.network-node
+ {
+  display: table-row;
+  background-color: #f8f8f8;
+ }
+
+.network-node:nth-child(even)
+ {
+  background-color: #f0f0f0;
+ }
+
+.network-node > div
+ {
+  padding: 5px;
+  display: table-cell;
+  vertical-align: middle;
+ }
+
+.network-icon
+ {
+  background-image: url('images/wifi.png');
+  width: 32px;
+  height: 32px;
+  float: right;
+  position: relative;
+ }
+
+.enc-icon
+ {
+  background-image: url('images/wifi.png');
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+ }
+
+#tooltip
+ {
+  position: fixed;
+  z-index: 98;
+  top: 10px;
+  right: 10px;
+ }
+
+.tooltip
+ {
+  float: right;
+  clear: right;
+  padding: 0px 15px 0px 15px;
+  margin-bottom: 10px;
+ }
+
+.tooltip_info
+ {
+  color: #003300;
+  background: #ddffcc;
+ }
+
+.tooltip_error
+ {
+  color: #ff0000;
+  font-weight: bold;
+  background: #ffe6e6;
+ }
+
+#fade
+ {
+  position: fixed;
+  z-index: 99;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  display: none;
+ }
+
+#fade_inner
+ {
+  position: relative;
+  left: 50%;
+  top: 30%;
+  width: 250px;
+  margin-left: -125px;
+  text-align: center;
+  font-weight: bold;
+ }

@@ -1,0 +1,133 @@
+<html>
+ <head>
+  <title>WiFi Weather Sensor Setup</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../style.css" />
+  <script language="javascript" type="text/javascript" src="../minified.js"></script>
+  <script language="javascript" type="text/javascript" src="../ui.js"></script>
+  <script language="javascript" type="text/javascript" src="admin.js"></script>
+ </head>
+ <body>
+  <div id="main">
+   <div id="main-head">
+    <h1 class="main-header">WiFi Weather Sensor Setup</h1>
+    <p class="main-header"><a href="../index.html">Back</a></p>
+   </div>
+   <div id="main-inner">
+    <div id="main-menu">
+     <div class="btn menu-btn">
+      <p id="btn-network">Network settings</p>
+     </div>
+     <div class="btn menu-btn">
+      <p id="btn-sensor">Sensor settings</p>
+     </div>
+     <div class="btn menu-btn">
+      <p id="btn-user">User settings</p>
+     </div>
+     <div class="btn menu-btn">
+      <p id="btn-system">System information</p>
+     </div>
+    </div>
+    <div id="main-content">
+     <!-- Network settings -->
+     <div id="tab-network">
+      <h4>Network settings:</h4>
+      <div id="networks">
+       <div id="networks-table">
+        <p>Loading networks...</p>
+       </div>
+      </div>
+      <br />
+      <input type="hidden" id="wifi-essid">
+      <label for="wifi-pass">WiFi password, if applicable:</label><br />
+      <input type="password" id="wifi-pass">
+     </div>
+     <!-- Sensor settings -->
+     <div id="tab-sensor">
+      <h4>Sensor settings:</h4>
+      <label for="sensor-interval">Push interval (sec)</label><br />
+      <input type="text" id="sensor-interval"><br />
+      <br />
+      <br />
+      <label for="http-enabled">HTTP Push Service</label><br />
+      <select id="http-enabled"></select><br />
+      <div id="http-key-div">
+       <br />
+       <label for="http-key">HTTP API key</label><br />
+       <input type="text" id="http-key"><br />
+      </div>
+      <div id="http-grp-div">
+       <br />
+       <label for="http-grp">HTTP group</label><br />
+       <input type="text" id="http-grp"><br />
+      </div>
+      <div id="http-url-div">
+       <br />
+       <label for="http-url">HTTP Service URL</label><br />
+       <input type="text" id="http-url"><br />
+      </div>
+      <br />
+      <br />
+      <label for="mqtt-enabled">MQTT Service</label><br />
+      <select id="mqtt-enabled"></select><br />
+      <div id="mqtt-div">
+       <br />
+       <label for="mqtt-host">MQTT Host</label><br />
+       <input type="text" id="mqtt-host"><br />
+       <br />
+       <label for="mqtt-port">MQTT Port</label><br />
+       <input type="text" id="mqtt-port"><br />
+       <br />
+       <label for="mqtt-user">MQTT User</label><br />
+       <input type="text" id="mqtt-user"><br />
+       <br />
+       <label for="mqtt-pass">MQTT Password</label><br />
+       <input type="password" id="mqtt-pass"><br />
+       <br />
+       <label for="mqtt-topic">MQTT Topic</label><br />
+       <input type="text" id="mqtt-topic"><br />
+      </div>
+     </div>
+     <!-- User settings -->
+     <div id="tab-user">
+      <h4>User settings:</h4>
+      <label for="admin-user">Username</label><br />
+      <input type="text" id="admin-user"><br />
+      <br />
+      <label for="admin-pass">Password</label><br />
+      <input type="password" id="admin-pass"><br />
+     </div>
+     <!-- System information -->
+     <div id="tab-system">
+      <h4>ESP8266 WiFi Weather Sensor</h4>
+      <p>Copyright (c) 2015 - 2016 by Malte P&ouml;ggel &lt;malte&#64poeggel.de&gt;</p>
+      <img src="../images/gplv3.png"><br>
+      <p><a href="http://maltepoeggel.de/?site=espweather" target="_blank">http://maltepoeggel.de/?site=espweather</a><br><a href="https://github.com/MalteP/espweather" target="_blank">https://github.com/MalteP/espweather</a></p>
+      <h4>Build information:</h4>
+       <div id="tab-system-inner">
+        <pre>Loading...</pre>
+       </div>
+       <h4>Third party code:</h4>
+       <pre><b>esphttpd, espfs</b><br>Copyright (c) Jeroen Domburg<br><a href="https://github.com/Spritetm/esphttpd" target="_blank">https://github.com/Spritetm/esphttpd</a><br>License: Beer-Ware</pre>
+       <pre><b>heatshrink</b><br>Copyright (c) 2013-2015 Scott Vokes<br><a href="https://github.com/atomicobject/heatshrink" target="_blank">https://github.com/atomicobject/heatshrink</a><br>License: MIT</pre>
+       <pre><b>esphttpclient</b><br>Copyright (c) Martin d'Allens<br><a href="https://github.com/Caerbannog/esphttpclient" target="_blank">https://github.com/Caerbannog/esphttpclient</a><br>License: Beer-Ware</pre>
+       <pre><b>esp_mqtt</b><br>Copyright (c) 2014-2015 Tuan PM<br>Copyright (c) 2015 Rui Huang<br><a href="https://github.com/vowstar/esp_mqtt" target="_blank">https://github.com/vowstar/esp_mqtt</a><br>License: MIT</pre>
+       <pre><b>I2C driver</b><br>Copyright (c) 2014 Rudy Hardeman<br><a href="https://github.com/zarya/esp8266_i2c_driver" target="_blank">https://github.com/zarya/esp8266_i2c_driver/</a><br>License: GPL</pre>
+     </div>
+    </div>
+    <div id="main-buttons">
+     <div class="btn save-btn">
+      <p id="btn-save">Save settings</p>
+     </div>
+    </div>
+   </div>
+   <div id="main-bottom">
+   </div>
+  </div>
+  <div id="tooltip">
+  </div>
+  <div id="fade">
+   <div id="fade_inner" class="grn-border"><p id="fade_text">Please wait...</p></div>
+  </div>
+ </body>
+</html>
