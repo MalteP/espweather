@@ -33,7 +33,7 @@
  #define SHT_CLK_PIN 5
 
  // Use CRC?
- //#define SHT_USE_CRC
+ #define SHT_USE_CRC
 
  // Use floating point calculations
  #define USE_FLOAT_CALC
@@ -96,10 +96,9 @@
   {
    int16_t temperature;
    int16_t humidity;
-   bool    valid;
   };
 
- void shtInit( struct shtdata* d );
+ int shtInit( struct shtdata* d );
  int shtRead( struct shtdata* d );
 
  // Low level functions

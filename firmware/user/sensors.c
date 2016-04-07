@@ -23,29 +23,63 @@
 #include <esp8266.h>
 #include "sensors.h"
 #include "dht22.h"
-#include "bmp180.h"
 #include "sht1x.h"
+#include "bmp180.h"
+#include "ms5637.h"
 #include "battery.h"
 
+struct shtdata sht1x;
 struct dhtdata dht22;
+struct msdata ms5637;
 struct bmpdata bmp180;
-struct shtdata sht;
+
+int sht1x_available = -1;
+int ms5637_available = -1;
+int bmp180_available = -1;
+
+int temphum_valid = -1;
+int pressure_valid = -1;
+
+int read_limit = 0;
+
 char temperature[8];
 char humidity[8];
 char pressure[8];
 char battery[8];
 
+void sensorsReadCb( void *arg );
+void readLimitCb( void *arg );
+
 
 // Initialize sensors
 void ICACHE_FLASH_ATTR sensorsInit( void )
  {
-  dht22Init();
-  shtInit(&sht);
-  bmpInit(&bmp180);
+  static ETSTimer sensorsTimer;
+  sht1x_available = shtInit(&sht1x);
+  dht22Init(&dht22);
+  ms5637_available = msInit(&ms5637);
+  bmp180_available = bmpInit(&bmp180);
+  os_printf("Sensors: SHT=%c, DHT=?, MS=%c, BMP=%c\n", (sht1x_available==0?'y':'n'), (ms5637_available==0?'y':'n'), (bmp180_available==0?'y':'n'));
   temperature[0]='\0';
   humidity[0]='\0';
   pressure[0]='\0';
   battery[0]='\0';
+  // Because GPIO2 (DHT22 pin) is alternative UART TX in bootloader mode, the sensor seems
+  // to get a little bit confused and needs some delay before first read after boot...
+  if(sht1x_available!=0)
+   {
+    os_timer_disarm(&sensorsTimer);
+    os_timer_setfn(&sensorsTimer, sensorsReadCb, NULL);
+    os_timer_arm(&sensorsTimer, 250, 0);
+   } else {
+    sensorsRead();
+   }
+ }
+
+
+// First read a few hundred milliseconds delayed
+void ICACHE_FLASH_ATTR sensorsReadCb( void *arg )
+ {
   sensorsRead();
  }
 
@@ -53,13 +87,37 @@ void ICACHE_FLASH_ATTR sensorsInit( void )
 // Read available sensors
 void ICACHE_FLASH_ATTR sensorsRead( void )
  {
-  shtRead(&sht);
-  // No SHT1x? Try to read DHT22
-  if(sht.valid!=true)
+  static ETSTimer limitTimer;
+  if(read_limit!=0) return;
+  read_limit = 1;
+  temphum_valid = -1;
+  pressure_valid = -1;
+  if(sht1x_available==0)
    {
-    dht22Read(&dht22);
+    temphum_valid = shtRead(&sht1x);
+   } else {
+    temphum_valid = dht22Read(&dht22);
    }
-  bmpReadSensor(&bmp180);
+  if(ms5637_available==0)
+   {
+    pressure_valid = msReadSensor(&ms5637);
+   } else {
+    if(bmp180_available==0)
+     {
+      pressure_valid = bmpReadSensor(&bmp180);
+     }
+   }
+  // Reading the sensor is only allowed every 5 sec.
+  os_timer_disarm(&limitTimer);
+  os_timer_setfn(&limitTimer, readLimitCb, NULL);
+  os_timer_arm(&limitTimer, 5000, 0);
+ }
+
+
+// Reset flag
+void ICACHE_FLASH_ATTR readLimitCb( void *arg )
+ {
+  read_limit = 0;
  }
 
 
@@ -67,13 +125,14 @@ void ICACHE_FLASH_ATTR sensorsRead( void )
 char* ICACHE_FLASH_ATTR temperatureToString( void )
  {
   temperature[0]='\0';
-  if(sht.valid==true)
+  if(temphum_valid!=0) goto end;
+  if(sht1x_available==0)
    {
-    os_sprintf(temperature, "%d.%d", (sht.temperature/10), abs(sht.temperature%10));
-   } else if(dht22.valid==true)
-    {
+    os_sprintf(temperature, "%d.%d", (sht1x.temperature/10), abs(sht1x.temperature%10));
+   } else {
     os_sprintf(temperature, "%d.%d", (dht22.temperature/10), abs(dht22.temperature%10));
-    }
+   }
+  end:
   return temperature;
  }
 
@@ -82,13 +141,14 @@ char* ICACHE_FLASH_ATTR temperatureToString( void )
 char* ICACHE_FLASH_ATTR humidityToString( void )
  {
   humidity[0]='\0';
-  if(sht.valid==true)
+  if(temphum_valid!=0) goto end;
+  if(sht1x_available==0)
    {
-    os_sprintf(humidity, "%d.%d", (sht.humidity/10), abs(sht.humidity%10));
-   } else if(dht22.valid==true)
-    {
+    os_sprintf(humidity, "%d.%d", (sht1x.humidity/10), abs(sht1x.humidity%10));
+   } else {
     os_sprintf(humidity, "%d.%d", (dht22.humidity/10), abs(dht22.humidity%10));
-    }
+   }
+  end:
   return humidity;
  }
 
@@ -97,7 +157,17 @@ char* ICACHE_FLASH_ATTR humidityToString( void )
 char* ICACHE_FLASH_ATTR pressureToString( void )
  {
   pressure[0]='\0';
-  os_sprintf(pressure, "%ld.%02d", (bmp180.p/100), abs(bmp180.p%100));
+  if(pressure_valid!=0) goto end;
+  if(ms5637_available==0)
+   {
+    os_sprintf(pressure, "%ld.%02d", (ms5637.p/100), abs(ms5637.p%100));
+   } else {
+    if(bmp180_available==0)
+     {
+      os_sprintf(pressure, "%ld.%02d", (bmp180.p/100), abs(bmp180.p%100));
+     }
+   }
+  end:
   return pressure;
  }
 

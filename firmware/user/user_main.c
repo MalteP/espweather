@@ -83,15 +83,15 @@ void ICACHE_FLASH_ATTR user_init(void)
     sleepmode();
    }
 
-  // Initialize sensors
-  sensorsInit();
-
   // 0x40200000 is the base address for spi flash memory mapping, ESPFS_POS is the position
   // where image is written in flash that is defined in Makefile.
   espFsInit((void*)(0x40200000 + ESPFS_POS));
   httpdInit(builtInUrls, 80);
 
-  os_printf("\nReady\n");
+  os_printf("Ready\n");
+
+  // Init sensors
+  sensorsInit();
 
   // Check if wifi mode is correct
   configCheckWifiMode();

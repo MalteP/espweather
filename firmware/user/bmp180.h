@@ -23,9 +23,27 @@
 #ifndef BMP180_H
  #define BMP180_H
 
- #define BMP180_ADDR   0x77
- #define BMP180_ADDR_R ((BMP180_ADDR<<1)|1)
- #define BMP180_ADDR_W (BMP180_ADDR<<1)
+ #define BMP180_ADDR     0x77
+
+ #define BMP180_REG_AC1  0xAA
+ #define BMP180_REG_AC2  0xAC
+ #define BMP180_REG_AC3  0xAE
+ #define BMP180_REG_AC4  0xB0
+ #define BMP180_REG_AC5  0xB2
+ #define BMP180_REG_AC6  0xB4
+ #define BMP180_REG_B1   0xB6
+ #define BMP180_REG_B2   0xB8
+ #define BMP180_REG_MB   0xBA
+ #define BMP180_REG_MC   0xBC
+ #define BMP180_REG_MD   0xBE
+ #define BMP180_CTRL     0xF4
+ #define BMP180_SRESET   0xE0
+ #define BMP180_SRESET_V 0xB6
+ #define BMP180_TEMP     0x2E
+ #define BMP180_OUT_MSB  0xF6
+ #define BMP180_OUT_LSB  0xF7
+ #define BMP180_OUT_XLSB 0xF8
+
  #define BMP180_OSS    2
 
  // Structure for sensor data
@@ -51,8 +69,5 @@
  // Functions
  int bmpInit( struct bmpdata* d );
  int bmpReadSensor( struct bmpdata* d );
- int16_t bmpReadRegister16( uint8_t addr );
- int32_t bmpReadRegister24( uint8_t addr );
- int bmpWriteRegister8( uint8_t addr, uint8_t value );
 
 #endif

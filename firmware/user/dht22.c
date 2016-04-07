@@ -25,10 +25,13 @@
 
 
 // Init sensor
-int ICACHE_FLASH_ATTR dht22Init( void )
+int ICACHE_FLASH_ATTR dht22Init( struct dhtdata* d )
  {
   // GPIO2: DHT22 data
   PIN_FUNC_SELECT(DHT22_MUX, DHT22_FUNC);
+  GPIO_DIS_OUTPUT(DHT22_GPIO);
+  d->humidity = 0;
+  d->temperature = 0;
   return 0;
  }
 
@@ -41,7 +44,6 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
   uint8_t chksum = 0;
 
   // Reset data
-  d->valid = false;
   for(i=0; i<5; i++)
    {
     d->rawdata[i] = 0;
@@ -117,7 +119,6 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
     goto endfunction;
    }
 
-  d->valid = true;
   d->humidity = ((uint16_t)d->rawdata[0]<<8) + d->rawdata[1];
   d->temperature = ((uint16_t)d->rawdata[2]<<8) + d->rawdata[3];
   os_printf("DHT22: t=%d, h=%d\n", d->temperature, d->humidity);
@@ -130,6 +131,7 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
 
   // Print errormessage
   os_printf("DHT22 read failed. %d bits received.\n", bitctr);
+  return -1;
 
   endfunction:
   return 0;

@@ -1,7 +1,7 @@
 // #############################################################################
 // #                        ESP8266 WiFi Weather Sensor                        #
 // #############################################################################
-// # dht22.h - Functions for DHT22 temperature / humidity sensor               #
+// # ms5637.h - Functions for MS5637 barometer                                 #
 // #############################################################################
 // #            Version: 1.0 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
 // #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
@@ -20,41 +20,51 @@
 // #      with this program; if not, see <http://www.gnu.org/licenses/>.       #
 // #############################################################################
 
-#ifndef DHT22_H
- #define DHT22_H
+#ifndef MS5637_H
+ #define MS5637_H
 
- #define DHT22_MUX PERIPHS_IO_MUX_GPIO2_U
- #define DHT22_FUNC FUNC_GPIO2
- #define DHT22_GPIO 2
+ #define MS5637_ADDR       0x76
 
- // Start pulse (1000us)
- #define DHT22_T_START_US 1000
+ #define MS5637_RESET      0x1E
+ #define MS5637_CONVERT_D1 0x40
+ #define MS5637_CONVERT_D2 0x50
+ #define MS5637_ADC_READ   0x00
+ #define MS5637_PROM_READ  0xA0
 
- // Bus master release time (20-200us)
- #define DHT22_T_RELEASE_US 40
+ #define MS5637_OSR_256    0x00 // 0
+ #define MS5637_OSR_512    0x02 // 1
+ #define MS5637_OSR_1024   0x04 // 2
+ #define MS5637_OSR_2048   0x06 // 3
+ #define MS5637_OSR_4096   0x08 // 4
+ #define MS5637_OSR_8192   0x0A // 5
 
- // Response pulse max time (75-85us)
- #define DHT22_T_RESPONSE_US 85
+ #define MS5637_OSR_PRES   MS5637_OSR_2048
+ #define MS5637_OS_PRES    3
 
- // Bit 0 & 1 low time (48-55us)
- #define DHT22_T_LOW 55
+ #define MS5637_OSR_TEMP   MS5637_OSR_2048
+ #define MS5637_OS_TEMP    3
 
- // Bit 0 high time (22-30us)
- #define DHT22_T_HIGH_0 32
+ // Enable CRC check of calibration data
+ #define MS5637_ENABLE_CRC_CHECK
 
- // Bit 1 high time (68-75us)
- #define DHT22_T_HIGH_1 75
+ // Enable 2nd order temperature compensation
+ #define MS5637_ENABLE_COMPENSATION
 
  // Structure for sensor data
- struct dhtdata
+ struct msdata
   {
-   uint8_t rawdata[5];
-   int16_t temperature;
-   int16_t humidity;
+   uint16_t c[8];
+   uint32_t d1;
+   uint32_t d2;
+   int32_t t;
+   int32_t p;
   };
 
  // Functions
- int dht22Init( struct dhtdata* d );
- int dht22Read( struct dhtdata* d );
+ int msInit( struct msdata* d );
+ int msReadSensor( struct msdata* d );
+ #ifdef MS5637_ENABLE_CRC_CHECK
+ uint16_t msCheckCRC( uint16_t prom[] );
+ #endif
 
 #endif

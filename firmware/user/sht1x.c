@@ -25,8 +25,12 @@
 
 
 // Initialize sensor
-void shtInit( struct shtdata* d )
+int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
  {
+  int rtn = -1;
+  uint16_t status;
+  uint8_t crc_calc;
+
   // Disable GPIO interrupts
   ETS_GPIO_INTR_DISABLE();
 
@@ -52,29 +56,39 @@ void shtInit( struct shtdata* d )
   // Reset data
   d->temperature = 0;
   d->humidity = 0;
-  d->valid = false;
 
   // Reset sensor
   shtReset();
 
+  // Check for sensor
+  shtStart();
+  shtWrite8(SHT_CMD_READ_STATUS_REG);
+  if(shtReadAck()!=0) goto endfunction;
+  shtRead16();
+  shtSendAck();
+  rtn = 0;
+
   // Reduce power consumption through pullup - same port as i2c
   SHT_CLK_HIGH();
+
+  endfunction:
+  return rtn;
  }
 
 
 // Read temperature & humidity
-int shtRead( struct shtdata* d )
+int ICACHE_FLASH_ATTR shtRead( struct shtdata* d )
  {
+  int rtn = -1;
   uint16_t t, h;
   uint8_t temp;
   #ifdef SHT_USE_CRC
   uint8_t crc, crc_calc;
   #endif
-  d->valid = false;
   // Read temperature
   shtStart();
   shtWrite8(SHT_CMD_MEASURE_TEMPERATURE);
-  shtReadAck();
+  if(shtReadAck()!=0) goto endfunction;
   temp=shtWaitForConversion(SHT_MEASUREMENT14_MS);
   if(temp!=0) goto endfunction;
   t = shtRead16();
@@ -87,7 +101,7 @@ int shtRead( struct shtdata* d )
   crc_calc = shtCalculateCRC(0x00, SHT_CMD_MEASURE_TEMPERATURE, (uint8_t)(t>>8), (uint8_t)t);
   if(crc!=crc_calc)
    {
-    os_printf("SHT1x: checksum mismatch %01x %01x\n", crc, crc_calc);
+    os_printf("SHT1x: checksum mismatch\n");
     goto endfunction;
    }
   #endif
@@ -96,7 +110,7 @@ int shtRead( struct shtdata* d )
   // Read humidity
   shtStart();
   shtWrite8(SHT_CMD_MEASURE_HUMIDITY);
-  shtReadAck();
+  if(shtReadAck()!=0) goto endfunction;
   temp=shtWaitForConversion(SHT_MEASUREMENT12_MS);
   if(temp!=0) goto endfunction;
   h = shtRead16();
@@ -109,7 +123,7 @@ int shtRead( struct shtdata* d )
   crc_calc = shtCalculateCRC(0x00, SHT_CMD_MEASURE_HUMIDITY, (uint8_t)(h>>8), (uint8_t)h);
   if(crc!=crc_calc)
    {
-    os_printf("SHT1x: checksum mismatch %01x %01x\n", crc, crc_calc);
+    os_printf("SHT1x: checksum mismatch\n");
     goto endfunction;
    }
   #endif
@@ -118,17 +132,17 @@ int shtRead( struct shtdata* d )
   // Done.
   //os_printf("SHT1x tRaw=%d, hRaw=%d", t, h);
   os_printf("SHT1x: t=%d, h=%d\n", d->temperature, d->humidity);
-  d->valid = true;
+  rtn=0;
   endfunction:
   // Reset port
   SHT_CLK_HIGH();
   SHT_DATA_HIGH();
-  return 0;
+  return rtn;
  }
 
 
 // Bus reset
-void shtReset( void )
+void ICACHE_FLASH_ATTR shtReset( void )
  {
   uint8_t i;
   SHT_DATA_HIGH();
@@ -146,7 +160,7 @@ void shtReset( void )
 
 
 // Start condition
-void shtStart( void )
+void ICACHE_FLASH_ATTR shtStart( void )
  {
   SHT_DATA_HIGH();
   SHT_CLK_LOW();
@@ -167,7 +181,7 @@ void shtStart( void )
 
 
 // Ack
-void shtSendAck( void )
+void ICACHE_FLASH_ATTR shtSendAck( void )
  {
   SHT_DATA_LOW();
   SHT_CLK_HIGH();
@@ -179,7 +193,7 @@ void shtSendAck( void )
 
 
 // Skip ack
-void shtSkipAck( void )
+void ICACHE_FLASH_ATTR shtSkipAck( void )
  {
   SHT_DATA_HIGH();
   SHT_CLK_HIGH();
@@ -190,7 +204,7 @@ void shtSkipAck( void )
 
 
 // Wait for ack from sensor
-uint8_t shtReadAck( void )
+uint8_t ICACHE_FLASH_ATTR shtReadAck( void )
  {
   uint8_t i = SHT_DATA_VALID_NS;
   SHT_DATA_HIGH();
@@ -208,7 +222,7 @@ uint8_t shtReadAck( void )
 
 
 // Read 8bit value
-uint8_t shtRead8( void )
+uint8_t ICACHE_FLASH_ATTR shtRead8( void )
  {
   uint8_t i;
   uint8_t data = 0;
@@ -228,7 +242,7 @@ uint8_t shtRead8( void )
 
 
 // Read 16bit value
-uint16_t shtRead16( void )
+uint16_t ICACHE_FLASH_ATTR shtRead16( void )
  {
   uint16_t data = 0;
   data = shtRead8();
@@ -240,7 +254,7 @@ uint16_t shtRead16( void )
 
 
 // Write 8bit value
-void shtWrite8( uint8_t data )
+void ICACHE_FLASH_ATTR shtWrite8( uint8_t data )
  {
   uint8_t i;
   SHT_DATA_HIGH();
@@ -264,7 +278,7 @@ void shtWrite8( uint8_t data )
 
 
 // Wait until sensor finishes ADC conversion
-uint8_t shtWaitForConversion( uint16_t time )
+uint8_t ICACHE_FLASH_ATTR shtWaitForConversion( uint16_t time )
  {
   SHT_DATA_HIGH();
   SHT_CLK_LOW();
@@ -279,7 +293,7 @@ uint8_t shtWaitForConversion( uint16_t time )
 
 
 // Delay between pulses
-void shtDelay( void )
+void ICACHE_FLASH_ATTR shtDelay( void )
  {
   os_delay_us(SHT_TSCK_NS);
  }
@@ -287,14 +301,14 @@ void shtDelay( void )
 
 // Will return temperature x10
 #ifdef USE_FLOAT_CALC
-int16_t shtConvertTemperature( uint16_t temperature_raw )
+int16_t ICACHE_FLASH_ATTR shtConvertTemperature( uint16_t temperature_raw )
  {
   float temperature;
   temperature = SHT_TEMPERATURE_D1 + SHT_TEMPERATURE_D2 * (float)temperature_raw;
   return (uint16_t)(temperature*10);
  }
 #else
-int16_t shtConvertTemperature( uint16_t temperature_raw )
+int16_t ICACHE_FLASH_ATTR shtConvertTemperature( uint16_t temperature_raw )
  {
   int16_t temperature;
   temperature = SHT_TEMPERATURE_D1*100;
@@ -307,7 +321,7 @@ int16_t shtConvertTemperature( uint16_t temperature_raw )
 
 // Will return humidity x10
 #ifdef USE_FLOAT_CALC
-int16_t shtConvertHumidity( uint16_t humidity_raw, int16_t temperature )
+int16_t ICACHE_FLASH_ATTR shtConvertHumidity( uint16_t humidity_raw, int16_t temperature )
  {
   int16_t humidity_compensated = 0;
   float linear, humidity;
@@ -321,7 +335,7 @@ int16_t shtConvertHumidity( uint16_t humidity_raw, int16_t temperature )
   return humidity_compensated;
  }
 #else
-int16_t shtConvertHumidity( uint16_t humidity_raw, int16_t temperature )
+int16_t ICACHE_FLASH_ATTR shtConvertHumidity( uint16_t humidity_raw, int16_t temperature )
  {
   int32_t humidity;
   int32_t linear;
@@ -348,7 +362,7 @@ int16_t shtConvertHumidity( uint16_t humidity_raw, int16_t temperature )
 
 #ifdef SHT_USE_CRC
 // Used for CRC check
-uint8_t shtReverseByte( uint8_t a )
+uint8_t ICACHE_FLASH_ATTR shtReverseByte( uint8_t a )
  {
   uint8_t i, b = 0;
   for(i=8; i>0; i--)
@@ -362,7 +376,7 @@ uint8_t shtReverseByte( uint8_t a )
 
 
 // Check CRC of sensor data
-uint8_t shtCalculateCRC( uint8_t start, uint8_t byte0, uint8_t byte1, uint8_t byte2 )
+uint8_t ICACHE_FLASH_ATTR shtCalculateCRC( uint8_t start, uint8_t byte0, uint8_t byte1, uint8_t byte2 )
  {
   // Start value: data of status register (reversed!)
   uint8_t crc = shtReverseByte(start);

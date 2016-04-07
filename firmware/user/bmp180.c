@@ -22,6 +22,7 @@
 
 #include <esp8266.h>
 #include <i2c/i2c.h>
+#include "i2c-common.h"
 #include "bmp180.h"
 
 
@@ -29,18 +30,19 @@
 int ICACHE_FLASH_ATTR bmpInit( struct bmpdata* d )
  {
   i2c_init();
+  if(i2cWriteRegister8(BMP180_ADDR, BMP180_SRESET, BMP180_SRESET_V)!=0) return -1;
   // Read calibration data
-  d->ac1 = bmpReadRegister16(0xAA);
-  d->ac2 = bmpReadRegister16(0xAC);
-  d->ac3 = bmpReadRegister16(0xAE);
-  d->ac4 = (uint16_t) bmpReadRegister16(0xB0);
-  d->ac5 = (uint16_t) bmpReadRegister16(0xB2);
-  d->ac6 = (uint16_t) bmpReadRegister16(0xB4);
-  d->b1 = bmpReadRegister16(0xB6);
-  d->b2 = bmpReadRegister16(0xB8);
-  d->mb = bmpReadRegister16(0xBA);
-  d->mc = bmpReadRegister16(0xBC);
-  d->md = bmpReadRegister16(0xBE);
+  d->ac1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC1, I2C_NO_STOP);
+  d->ac2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC2, I2C_NO_STOP);
+  d->ac3 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC3, I2C_NO_STOP);
+  d->ac4 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC4, I2C_NO_STOP);
+  d->ac5 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC5, I2C_NO_STOP);
+  d->ac6 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC6, I2C_NO_STOP);
+  d->b1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_B1, I2C_NO_STOP);
+  d->b2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_B2, I2C_NO_STOP);
+  d->mb = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MB, I2C_NO_STOP);
+  d->mc = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MC, I2C_NO_STOP);
+  d->md = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MD, I2C_NO_STOP);
   //os_printf("BMP180 calibration values: AC1=%d, AC2=%d, AC3=%d, AC4=%u, AC5=%u, AC6=%u, B1=%d, B2=%d, MB=%d, MC=%d, MD=%d\n", d->ac1, d->ac2, d->ac3, d->ac4, d->ac5, d->ac6, d->b1, d->b2, d->mb, d->mc, d->md );
   return 0;
  }
@@ -52,14 +54,14 @@ int ICACHE_FLASH_ATTR bmpReadSensor( struct bmpdata* d )
   int32_t x1, x2, x3, b3, b5, b6;
   uint32_t b4, b7;
   // Read uncompensated temperature value
-  bmpWriteRegister8(0xF4, 0x2E);
+  if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, BMP180_TEMP)!=0) return -1;
   os_delay_us(5000);
-  d->ut = bmpReadRegister16(0xF6);
+  d->ut = i2cReadRegister16(BMP180_ADDR, BMP180_OUT_MSB, I2C_NO_STOP);
   // Read uncompensated pressure value
-  bmpWriteRegister8(0xF4, 0x34+(BMP180_OSS<<6));
+  if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, 0x34+(BMP180_OSS<<6))!=0) return -1;
   os_delay_us(2000);
   os_delay_us(3000<<BMP180_OSS);
-  d->up = bmpReadRegister24(0xF6) >> (8-BMP180_OSS);
+  d->up = i2cReadRegister24(BMP180_ADDR, BMP180_OUT_MSB, I2C_NO_STOP) >> (8-BMP180_OSS);
   // Calculate temperature
   x1 = (d->ut - d->ac6) * d->ac5 / 32768;
   x2 = d->mc * 2048 / (x1 + d->md);
@@ -88,111 +90,5 @@ int ICACHE_FLASH_ATTR bmpReadSensor( struct bmpdata* d )
   d->p = d->p + (x1 + x2 + 3791) / 16;
   // Done.
   os_printf("BMP180: t=%ld, p=%ld\n", (long)d->t, (long)d->p);
-  return 0;
- }
-
-
-// Read 16bit register via i2c
-int16_t ICACHE_FLASH_ATTR bmpReadRegister16( uint8_t addr )
- {
-  uint16_t data;
-  i2c_start();
-  // Sensor write address
-  i2c_writeByte(BMP180_ADDR_W);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Register address
-  i2c_writeByte(addr);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Repeated start
-  i2c_start();
-  // Sensor read address
-  i2c_writeByte(BMP180_ADDR_R);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Read and return data
-  data = i2c_readByte()<<8;
-  i2c_send_ack(1);
-  data |= i2c_readByte();
-  i2c_stop();
-  return data;
- }
-
-
-// Read 24bit register via i2c
-int32_t ICACHE_FLASH_ATTR bmpReadRegister24( uint8_t addr )
- {
-  uint32_t data;
-  i2c_start();
-  // Sensor write address
-  i2c_writeByte(BMP180_ADDR_W);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Register address
-  i2c_writeByte(addr);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Repeated start
-  i2c_start();
-  // Sensor read address
-  i2c_writeByte(BMP180_ADDR_R);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Read and return data
-  data = i2c_readByte()<<16;
-  i2c_send_ack(1);
-  data |= i2c_readByte()<<8;
-  i2c_send_ack(1);
-  data |= i2c_readByte();
-  i2c_stop();
-  return data;
- }
-
-
-// Write 8bit register via i2c
-int ICACHE_FLASH_ATTR bmpWriteRegister8( uint8_t addr, uint8_t value )
- {
-  i2c_start();
-  // Sensor write address
-  i2c_writeByte(BMP180_ADDR_W);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Register address
-  i2c_writeByte(addr);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  // Write value
-  i2c_writeByte(value);
-  if (!i2c_check_ack())
-   {
-    i2c_stop();
-    return 0;
-   }
-  i2c_stop();
   return 0;
  }

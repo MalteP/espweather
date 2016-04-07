@@ -1,7 +1,7 @@
 // #############################################################################
 // #                        ESP8266 WiFi Weather Sensor                        #
 // #############################################################################
-// # dht22.h - Functions for DHT22 temperature / humidity sensor               #
+// # i2c-common.h - Common I2C read & write routines                           #
 // #############################################################################
 // #            Version: 1.0 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
 // #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
@@ -20,41 +20,17 @@
 // #      with this program; if not, see <http://www.gnu.org/licenses/>.       #
 // #############################################################################
 
-#ifndef DHT22_H
- #define DHT22_H
+#ifndef I2C_COMMON_H
+ #define I2C_COMMON_H
 
- #define DHT22_MUX PERIPHS_IO_MUX_GPIO2_U
- #define DHT22_FUNC FUNC_GPIO2
- #define DHT22_GPIO 2
-
- // Start pulse (1000us)
- #define DHT22_T_START_US 1000
-
- // Bus master release time (20-200us)
- #define DHT22_T_RELEASE_US 40
-
- // Response pulse max time (75-85us)
- #define DHT22_T_RESPONSE_US 85
-
- // Bit 0 & 1 low time (48-55us)
- #define DHT22_T_LOW 55
-
- // Bit 0 high time (22-30us)
- #define DHT22_T_HIGH_0 32
-
- // Bit 1 high time (68-75us)
- #define DHT22_T_HIGH_1 75
-
- // Structure for sensor data
- struct dhtdata
-  {
-   uint8_t rawdata[5];
-   int16_t temperature;
-   int16_t humidity;
-  };
+ // Send I2C stop before repeated start?
+ #define I2C_NO_STOP   0
+ #define I2C_SEND_STOP 1
 
  // Functions
- int dht22Init( struct dhtdata* d );
- int dht22Read( struct dhtdata* d );
+ int i2cWriteCmd( uint8_t device, uint8_t value, uint8_t sendstop );
+ int i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t value );
+ int16_t i2cReadRegister16( uint8_t device, uint8_t value, uint8_t sendstop );
+ int32_t i2cReadRegister24( uint8_t device, uint8_t value, uint8_t sendstop );
 
 #endif
