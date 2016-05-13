@@ -34,7 +34,7 @@ The LDO IC3 regulates the battery voltage down to 3.3V for power supply of the w
 
 The top side (except for the SHT11 sensor) is soldered in a reflow oven. Just apply solder paste through a CNC cut stencil and bake the board with the appropriate temperature profile. If you don't own a reflow oven, a hot air soldering station might work, too.
 
-The bottom side is assembled using a conventional soldering iron. It's the best practice to start with the smallest components first.
+The bottom side is assembled using a conventional soldering iron. It's the best practice to start with the smallest components first. If the sensor should run on batteries, don't forget to remove the red LED from the ESP8266 module.
 
 ## Preparing the hardware to flash
 
