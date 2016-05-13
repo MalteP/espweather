@@ -75,6 +75,9 @@ void ICACHE_FLASH_ATTR user_init(void)
   configInit();
   configLoad();
 
+  // Check if wifi mode is correct
+  configCheckWifiMode();
+
   // Measure battery voltage
   batteryMeasureVoltage();
   if(!batteryCheckVoltage())
@@ -92,9 +95,6 @@ void ICACHE_FLASH_ATTR user_init(void)
 
   // Init sensors
   sensorsInit();
-
-  // Check if wifi mode is correct
-  configCheckWifiMode();
 
   if(configGet()->sensor_mode==MODE_NORMAL)
    {

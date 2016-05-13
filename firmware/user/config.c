@@ -135,9 +135,17 @@ void ICACHE_FLASH_ATTR configCheckWifiMode( void )
   int mode = wifi_get_opmode();
   if(myConfig.sensor_mode==MODE_NORMAL)
    {
-    if(mode!=1) configSetWifiMode(1); // STA
+    if(mode!=1)
+     {
+      configSetWifiMode(1); // STA
+      wifi_set_sleep_type(MODEM_SLEEP_T); // Save some power
+     }
    } else {
-    if(mode!=3) configSetWifiMode(3); // AP+STA
+    if(mode!=3)
+     {
+      configSetWifiMode(3); // AP+STA
+      wifi_set_sleep_type(NONE_SLEEP_T); // No sleep possible
+     }
    }
  }
 
