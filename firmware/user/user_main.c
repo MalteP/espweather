@@ -35,6 +35,8 @@
 #include "sensors.h"
 #include "push.h"
 
+void init_done(void);
+
 
 // Password authentication for admin interface
 int myPassFn(HttpdConnData *connData, int no, char *user, int userLen, char *pass, int passLen)
@@ -66,7 +68,7 @@ HttpdBuiltInUrl builtInUrls[]=
  };
 
 
-// Main routine, initialize sensors, webserver and push data
+// Main routine, initialize some basic stuff
 void ICACHE_FLASH_ATTR user_init(void)
  {
   // Init some stuff
@@ -91,7 +93,18 @@ void ICACHE_FLASH_ATTR user_init(void)
   espFsInit((void*)(0x40200000 + ESPFS_POS));
   httpdInit(builtInUrls, 80);
 
+  // Register callback
+  system_init_done_cb(init_done);
+
   os_printf("Ready\n");
+ }
+
+
+// Initialize wifi, sensors and push data
+void ICACHE_FLASH_ATTR init_done(void)
+ {
+  // Init wifi IP configuration
+  configInitIP();
 
   // Init sensors
   sensorsInit();
@@ -104,5 +117,6 @@ void ICACHE_FLASH_ATTR user_init(void)
     // Configuration mode
     statusLed(LED_BLINK);
    }
-
  }
+
+

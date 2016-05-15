@@ -2,6 +2,7 @@ var MINI = require("minified");
 var _=MINI._, $=MINI.$, $$=MINI.$$, EE=MINI.EE, HTML=MINI.HTML;
 var wifi_mode = 0;
 var services = null;
+var wifi_dhcp = 1;
 var http_enabled = 0;
 var mqtt_enabled = 0;
 var user_loaded = 0;
@@ -21,6 +22,7 @@ function init_admin()
   $("#btn-user").onClick(function() {showtab(2)});
   $("#btn-system").onClick(function() {showtab(3)});
   $("#btn-save").onClick(function() {save_settings(0)});
+  $("#wifi-dhcp").onChange(function() {change_wifi_settings()});
   $("#http-enabled").onChange(function() {change_sensor_settings()});
   $("#mqtt-enabled").onChange(function() {change_sensor_settings()});
  }
@@ -101,13 +103,18 @@ function load_wifi_settings( callback )
    .then(function(txt) {
     block_ui(0);
     var json = $.parseJSON(txt);
-    $("#wifi-essid").set("value", json.wifi_essid);
-    $("#wifi-pass").set("value", json.wifi_pass);
     wifi_mode = json.wifi_mode;
     if(wifi_mode!=3)
      {
       $("#networks-table").fill(EE("p", "Scanning disabled in station mode."));
      }
+    $("#wifi-essid").set("value", json.wifi_essid);
+    $("#wifi-pass").set("value", json.wifi_pass);
+    wifi_dhcp = json.wifi_dhcp;
+    $("#wifi-ip").set("value", json.wifi_ip);
+    $("#wifi-mask").set("value", json.wifi_mask);
+    $("#wifi-gw").set("value", json.wifi_gw);
+    render_wifi_settings();
     wifi_loaded = 1;
     callback();
    })
@@ -120,13 +127,38 @@ function load_wifi_settings( callback )
  }
 
 
+// Show or hide ip settings
+function render_wifi_settings()
+ {
+  $("#wifi-dhcp").set('selectedIndex', wifi_dhcp);
+  if(wifi_dhcp==0)
+   {
+    $("#wifi-div").show();
+   } else {
+    $("#wifi-div").hide();
+   }
+ }
+
+
+// DHCP dropdown - item changed
+function change_wifi_settings()
+ {
+  wifi_dhcp = $("#wifi-dhcp").get("value");
+  render_wifi_settings();
+ }
+
+
 // Save modified WIFI settings
 function save_wifi_settings( callback )
  {
   var essid = $("#wifi-essid").get("value");
   var pass = $("#wifi-pass").get("value");
+  var dhcp = $("#wifi-dhcp").get("value");
+  var ip = $("#wifi-ip").get("value");
+  var mask = $("#wifi-mask").get("value");
+  var gw = $("#wifi-gw").get("value");
   block_ui(1);
-  $.request("post", "wifisettings.cgi?action=save", {"wifi_essid": essid, "wifi_pass": pass})
+  $.request("post", "wifisettings.cgi?action=save", {"wifi_essid": essid, "wifi_pass": pass, "wifi_dhcp": dhcp, "wifi_ip": ip, "wifi_mask": mask, "wifi_gw": gw})
    .then(function(txt) {
     block_ui(0);
     var json = $.parseJSON(txt);

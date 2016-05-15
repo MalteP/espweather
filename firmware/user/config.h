@@ -66,6 +66,12 @@
  #define MQTT_PASS   ""
  #define MQTT_TOPIC  "/sensors/0"
 
+ // Default data IP configuration
+ #define WIFI_DHCP   1
+ #define WIFI_IP     "192.168.0.99"
+ #define WIFI_MASK   "255.255.255.0"
+ #define WIFI_GW     "192.168.0.1"
+
  // LED status
  #define LED_OFF     0
  #define LED_FLASH1  1
@@ -93,6 +99,11 @@
    char mqtt_user[64];
    char mqtt_pass[64];
    char mqtt_topic[64];
+   uint8_t wifi_dhcp;
+   char wifi_ip[16];
+   char wifi_mask[16];
+   char wifi_gw[16];
+   char pad[3];
   } MyConfig;
 
  void configInit( void );
@@ -104,6 +115,7 @@
  void configCheckWifiMode( void );
  void configSetWifiMode( int mode );
  void configRestart( void );
+ void configInitIP( void );
  void statusLed( uint8_t mode );
 
 #endif

@@ -39,8 +39,23 @@
       </div>
       <br />
       <input type="hidden" id="wifi-essid">
-      <label for="wifi-pass">WiFi password, if applicable:</label><br />
-      <input type="password" id="wifi-pass">
+      <label for="wifi-pass">WiFi password, if applicable</label><br />
+      <input type="password" id="wifi-pass"><br />
+      <br />
+      <br />
+      <label for="wifi-dhcp">Address configuration</label><br />
+      <select id="wifi-dhcp"><option value="0">Static</option><option value="1">DHCP</option></select><br />
+      <div id="wifi-div">
+       <br />
+       <label for="wifi-ip">IP Address</label><br />
+       <input type="text" id="wifi-ip"><br />
+       <br />
+       <label for="wifi-mask">Netmask</label><br />
+       <input type="text" id="wifi-mask"><br />
+       <br />
+       <label for="wifi-gw">Gateway</label><br />
+       <input type="text" id="wifi-gw"><br />
+      </div>
      </div>
      <!-- Sensor settings -->
      <div id="tab-sensor">

@@ -110,6 +110,10 @@ void ICACHE_FLASH_ATTR configReset( void )
   os_strcpy(myConfig.mqtt_pass, MQTT_PASS);
   os_strcpy(myConfig.mqtt_topic, MQTT_TOPIC);
   // Reset WLAN settings
+  myConfig.wifi_dhcp = WIFI_DHCP;
+  os_strcpy(myConfig.wifi_ip, WIFI_IP);
+  os_strcpy(myConfig.wifi_mask, WIFI_MASK);
+  os_strcpy(myConfig.wifi_gw, WIFI_GW);
   memset(&stconf, 0, sizeof(stconf));
   wifi_station_set_config(&stconf);
  }
@@ -177,6 +181,23 @@ void ICACHE_FLASH_ATTR configRestart( void )
 void ICACHE_FLASH_ATTR configRestartCb( void *arg )
  {
   system_restart();
+ }
+
+
+// WiFi IP address configuration
+void ICACHE_FLASH_ATTR configInitIP( void )
+ {
+  struct ip_info info;
+  os_memset(&info, 0x0, sizeof(info));
+  // DHCP configuration disabled?
+  if(myConfig.wifi_dhcp==0)
+   {
+    wifi_station_dhcpc_stop();
+    info.ip.addr = ipaddr_addr(myConfig.wifi_ip);
+    info.netmask.addr = ipaddr_addr(myConfig.wifi_mask);
+    info.gw.addr = ipaddr_addr(myConfig.wifi_gw);
+    wifi_set_ip_info(STATION_IF, &info);
+   }
  }
 
 

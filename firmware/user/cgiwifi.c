@@ -154,6 +154,8 @@ int ICACHE_FLASH_ATTR cgiWiFiScan(HttpdConnData *connData)
 int ICACHE_FLASH_ATTR cgiWiFiSettings(HttpdConnData *connData)
  {
   static struct station_config stconf;
+  MyConfig *cfgdummy;
+  char tmpstr[8];
   char buff[1024];
   char essid[32];
   char passwd[64];
@@ -192,7 +194,7 @@ int ICACHE_FLASH_ATTR cgiWiFiSettings(HttpdConnData *connData)
        }
       #endif
       x=wifi_get_opmode();
-      len=os_sprintf(buff, "{\n \"wifi_mode\": \"%d\",\n \"wifi_essid\": \"%s\",\n \"wifi_pass\": \"%s\"\n}\n", x, essid, passwd);
+      len=os_sprintf(buff, "{\n \"wifi_mode\": \"%d\",\n \"wifi_essid\": \"%s\",\n \"wifi_pass\": \"%s\",\n \"wifi_dhcp\": \"%d\",\n \"wifi_ip\": \"%s\",\n \"wifi_mask\": \"%s\",\n \"wifi_gw\": \"%s\"\n}\n", x, essid, passwd, configGet()->wifi_dhcp, configGet()->wifi_ip, configGet()->wifi_mask, configGet()->wifi_gw);
       httpdSend(connData, buff, len);
      } else
       if(os_strcmp(buff, "save")==0)
@@ -210,7 +212,19 @@ int ICACHE_FLASH_ATTR cgiWiFiSettings(HttpdConnData *connData)
           os_strcpy(passwd, (char*)stconf.password); // Load old PW
          }
         #endif
+        if(httpdFindArg(connData->post->buff, "wifi_dhcp", tmpstr, sizeof(tmpstr))!=0)
+         {
+          tmpstr[(sizeof(tmpstr)-1)] = '\0';
+          configGet()->wifi_dhcp = atoi(tmpstr);
+         }
+        httpdFindArg(connData->post->buff, "wifi_ip", configGet()->wifi_ip, sizeof(cfgdummy->wifi_ip));
+        configGet()->wifi_ip[(sizeof(cfgdummy->wifi_ip)-1)] = '\0';
+        httpdFindArg(connData->post->buff, "wifi_mask", configGet()->wifi_mask, sizeof(cfgdummy->wifi_mask));
+        configGet()->wifi_mask[(sizeof(cfgdummy->wifi_mask)-1)] = '\0';
+        httpdFindArg(connData->post->buff, "wifi_gw", configGet()->wifi_gw, sizeof(cfgdummy->wifi_gw));
+        configGet()->wifi_gw[(sizeof(cfgdummy->wifi_gw)-1)] = '\0';
         // Write config
+        configSave();
         os_strncpy((char*)stconf.ssid, essid, sizeof(stconf.ssid));
         os_strncpy((char*)stconf.password, passwd, sizeof(stconf.password));
         wifi_station_set_config(&stconf);
