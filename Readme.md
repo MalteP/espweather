@@ -14,21 +14,25 @@ The sensor can be powered using a standard USB power supply or any batteries wit
 
 Most of the components are available from [Reichelt Elektronik](http://www.reichelt.de/), some more specific parts at [Farnell](http://www.farnell.com/), [Mouser](http://www.mouser.com/) or [Digikey](http://www.digikey.com/). For the ESP-12 (PCB antenna only) or ESP-07 module (PCB antenna + U.FL connector) have a look at [eBay](http://www.ebay.com/) or [Aliexpress](http://www.aliexpress.com/).
 
-As temperature / humidity sensor either SHT11/SHT15 (more accurate) or AM2302/DHT22 (lower price) are possible. The connected sensor is detected automatically. Barometric pressure is measured by using the BMP180 sensor. 
+As temperature / humidity sensor either SHT11/SHT15 (more accurate) or AM2302/DHT22 (lower price) are possible. The connected sensor is detected automatically. Barometric pressure is measured by using the MS5637 sensor. (Or BMP180 on v1 circuit board)
 
-Here's a list of all components: [Bill of materials (PDF)](documents/parts.pdf)
+Here's a list of all components: [Bill of materials (PDF)](documents/parts_v2.pdf)
 
 #### Circuit board
 
 The circuit board is double-sided and plated-through. Because of that i'll recommend ordering it from a PCB manufacturer. Gerber files are included in the GIT repository. Possible good value PCB fabs are [OSH-Park (USA)](http://www.oshpark.com/), [Itead-Studio (China)](http://www.itead.cc/open-pcb.html) or [Dirty Cheap Circuit Boards (China)](http://www.dirtypcbs.com/).
 
-The design is already uploaded to OSH Park, just order it here: [WiFi Weather Sensor (Rev. D) Circuit Board](http://www.oshpark.com/shared_projects/jZi4VgjG)
+The design is already uploaded to OSH Park, just order it here:
+
+[WiFi Weather Sensor (Version 2) Circuit Board](http://www.oshpark.com/shared_projects/pmVMF4gY)
+
+[WiFi Weather Sensor (Version 1 rev. D) Circuit Board](http://www.oshpark.com/shared_projects/jZi4VgjG)
 
 #### Schematic
 
-[![Schematic](pictures/schematic.png)](documents/schematic.pdf)
+[![Schematic](pictures/schematic.png)](documents/schematic_v2.pdf)
 
-The LDO IC3 regulates the battery voltage down to 3.3V for power supply of the whole system. Battery voltage is monitored through the voltage divider R7 / R8 which is switched on by FET T2 only during measurement [to reduce power consumption](http://www.jeelabs.org/2013/05/18/zero-power-measurement-part-2/). The barometric pressure sensor BMP180 (IC4) and temperature / humidity sensor SHT11 (IC5) are connected to the ESP8266 module IC2 via I²C bus. Alternatively the temperature / humidity sensor AM2302/DHT22 (IC1) can be used. It is connected using a single wire bus. Status LED (D2) and a setup button (S1) are connected directly to the WiFi module. R3 is used as pull-up resistor for the button, R2 for the reset pin. In low power standby mode XPD_DCDC (GPIO16) is pulled low on wakeup timer event. I've connected it to the reset pin through a shottky diode (D1), because otherwise GPIO16 seemed to be at high level and there was a few ten milliamps of current flowing during reset if flashed via serial connection.
+The LDO IC3 regulates the battery voltage down to 3.3V for power supply of the whole system. Battery voltage is monitored through the voltage divider R7 / R8 which is switched on by FET T2 only during measurement [to reduce power consumption](http://www.jeelabs.org/2013/05/18/zero-power-measurement-part-2/). The barometric pressure sensor MS5637 (IC4) and temperature / humidity sensor SHT11 (IC5) are connected to the ESP8266 module IC2 via I²C bus. Alternatively the temperature / humidity sensor AM2302/DHT22 (IC1) can be used. It is connected using a single wire bus. Status LED (D2) and a setup button (S1) are connected directly to the WiFi module. R3 is used as pull-up resistor for the button, R2 for the reset pin. In low power standby mode XPD_DCDC (GPIO16) is pulled low on wakeup timer event. I've connected it to the reset pin through a shottky diode (D1), because otherwise GPIO16 seemed to be at high level and there was a few ten milliamps of current flowing during reset if flashed via serial connection.
 
 #### Assembling the board
 
