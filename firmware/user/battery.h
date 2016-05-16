@@ -31,6 +31,11 @@
  // chemistry used may be discharged to
  #define BATTERY_VOLTAGE_LIMIT_MV  3000
 
+ // Ports & registers
+ #define BATT_FET_MUX PERIPHS_IO_MUX_MTCK_U
+ #define BATT_FET_FUNC FUNC_GPIO13
+ #define BATT_FET_PIN 13
+
  void batteryInit( void );
  void batteryMeasureVoltage( void );
  unsigned int batteryGetVoltage( void );

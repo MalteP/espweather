@@ -29,8 +29,8 @@ unsigned int battery_voltage;
 // Initialize port
 void ICACHE_FLASH_ATTR batteryInit( void )
  {
-  PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13);
-  gpio_output_set((1<<13), 0, (1<<13), 0);
+  PIN_FUNC_SELECT(BATT_FET_MUX, BATT_FET_FUNC);
+  gpio_output_set((1<<BATT_FET_PIN), 0, (1<<BATT_FET_PIN), 0);
   battery_voltage = 0;
  }
 
@@ -43,10 +43,10 @@ void ICACHE_FLASH_ATTR batteryMeasureVoltage( void )
   // Voltage reference in ESP8266 is 1,00V -> 6,6V in = 1024
   // Calculation in millivolts (1V -> 1000mV)
   // GPIO13 is triggered to enable voltage measurement FET
-  gpio_output_set(0, (1<<13), (1<<13), 0);
+  gpio_output_set(0, (1<<BATT_FET_PIN), (1<<BATT_FET_PIN), 0);
   adc = system_adc_read();
   battery_voltage = (adc*1000*6.6)/1024;
-  gpio_output_set((1<<13), 0, (1<<13), 0);
+  gpio_output_set((1<<BATT_FET_PIN), 0, (1<<BATT_FET_PIN), 0);
   battery_voltage += BATTERY_VOLTAGE_OFFSET_MV;
   os_printf("Battery: ADC=%d, BatMv=%d\n", adc, battery_voltage);
  }
