@@ -20,7 +20,7 @@ GZIP_COMPRESSION ?= no
 # http://yui.github.io/yuicompressor/
 #Disabled by default.
 COMPRESS_W_YUI ?= yes
-YUI-COMPRESSOR ?= /usr/bin/yui-compressor
+YUI-COMPRESSOR ?= yui-compressor
 
 #If USE_HEATSHRINK is set to "yes" then the espfs files will be compressed with Heatshrink and decompressed
 #on the fly while reading the file. Because the decompression is done in the esp8266, it does not require
