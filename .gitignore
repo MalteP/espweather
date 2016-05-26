@@ -1,2 +1,9 @@
 *.swp
 *.bak
+*.o
+firmware/build/
+firmware/firmware/
+firmware/html_compressed/
+firmware/lib/espfs/mkespfsimage/mkespfsimage
+firmware/webpages.espfs
+
