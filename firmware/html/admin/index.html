@@ -38,9 +38,9 @@
        </div>
       </div>
       <br />
-      <input type="hidden" id="wifi-essid">
+      <input type="hidden" id="wifi-essid" maxlength="63">
       <label for="wifi-pass">WiFi password, if applicable</label><br />
-      <input type="password" id="wifi-pass"><br />
+      <input type="password" id="wifi-pass" maxlength="63"><br />
       <br />
       <br />
       <label for="wifi-dhcp">Address configuration</label><br />
@@ -48,38 +48,38 @@
       <div id="wifi-div">
        <br />
        <label for="wifi-ip">IP address</label><br />
-       <input type="text" id="wifi-ip"><br />
+       <input type="text" id="wifi-ip" maxlength="15"><br />
        <br />
        <label for="wifi-mask">Subnet mask</label><br />
-       <input type="text" id="wifi-mask"><br />
+       <input type="text" id="wifi-mask" maxlength="15"><br />
        <br />
        <label for="wifi-gw">Default gateway</label><br />
-       <input type="text" id="wifi-gw"><br />
+       <input type="text" id="wifi-gw" maxlength="15"><br />
       </div>
      </div>
      <!-- Sensor settings -->
      <div id="tab-sensor">
       <h4>Sensor settings:</h4>
       <label for="sensor-interval">Push interval (sec)</label><br />
-      <input type="text" id="sensor-interval"><br />
+      <input type="text" id="sensor-interval" maxlength="5"><br />
       <br />
       <br />
       <label for="http-enabled">HTTP push service</label><br />
       <select id="http-enabled"></select><br />
       <div id="http-key-div">
        <br />
-       <label for="http-key">HTTP API key</label><br />
-       <input type="text" id="http-key"><br />
+       <label for="http-key" id="http-key-label"></label><br />
+       <input type="text" id="http-key" maxlength="63"><br />
       </div>
       <div id="http-grp-div">
        <br />
-       <label for="http-grp">HTTP group</label><br />
-       <input type="text" id="http-grp"><br />
+       <label for="http-grp" id="http-grp-label"></label><br />
+       <input type="text" id="http-grp" maxlength="63"><br />
       </div>
       <div id="http-url-div">
        <br />
        <label for="http-url">HTTP service URL</label><br />
-       <input type="text" id="http-url"><br />
+       <input type="text" id="http-url" maxlength="127"><br />
       </div>
       <br />
       <br />
@@ -88,29 +88,29 @@
       <div id="mqtt-div">
        <br />
        <label for="mqtt-host">MQTT host</label><br />
-       <input type="text" id="mqtt-host"><br />
+       <input type="text" id="mqtt-host" maxlength="63"><br />
        <br />
        <label for="mqtt-port">MQTT port</label><br />
-       <input type="text" id="mqtt-port"><br />
+       <input type="text" id="mqtt-port" maxlength="5"><br />
        <br />
        <label for="mqtt-user">MQTT user</label><br />
-       <input type="text" id="mqtt-user"><br />
+       <input type="text" id="mqtt-user" maxlength="63"><br />
        <br />
        <label for="mqtt-pass">MQTT password</label><br />
-       <input type="password" id="mqtt-pass"><br />
+       <input type="password" id="mqtt-pass" maxlength="63"><br />
        <br />
        <label for="mqtt-topic">MQTT topic</label><br />
-       <input type="text" id="mqtt-topic"><br />
+       <input type="text" id="mqtt-topic" maxlength="63"><br />
       </div>
      </div>
      <!-- User settings -->
      <div id="tab-user">
       <h4>User settings:</h4>
       <label for="admin-user">Username</label><br />
-      <input type="text" id="admin-user"><br />
+      <input type="text" id="admin-user" maxlength="31"><br />
       <br />
       <label for="admin-pass">Password</label><br />
-      <input type="password" id="admin-pass"><br />
+      <input type="password" id="admin-pass" maxlength="31"><br />
      </div>
      <!-- System information -->
      <div id="tab-system">

@@ -3,7 +3,7 @@
 // #############################################################################
 // # push.c - Push data to HTTP service or MQTT server                         #
 // #############################################################################
-// #            Version: 1.1 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
+// #            Version: 1.2 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
 // #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
 // #############################################################################
 // #  This program is free software; you can redistribute it and/or modify it  #
@@ -154,22 +154,24 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
    {
     // thingspeak.com
     os_sprintf(buff, HTTP_THINGSPEAK, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
-    if(!http_get(buff, "", httpPushCb)) return 1;
    } else
     if(mode==2)
      {
       // adafruit.io
       os_sprintf(buff, HTTP_ADAFRUIT, configGet()->http_grp, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
-      if(!http_get(buff, "", httpPushCb)) return 1;
-     } else {
-      // Custom URL
-      os_strcpy(buff, configGet()->http_url);
-      strreplace(buff, "%t", temperatureToString(), sizeof(buff));
-      strreplace(buff, "%h", humidityToString(), sizeof(buff));
-      strreplace(buff, "%p", pressureToString(), sizeof(buff));
-      strreplace(buff, "%v", batteryVoltageToString(), sizeof(buff));
-      if(!http_get(buff, "", httpPushCb)) return 1;
-     }
+     } else
+      if(mode==3)
+       {
+        os_sprintf(buff, HTTP_SPARKFUN, configGet()->http_key, configGet()->http_grp, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
+       } else {
+        // Custom URL
+        os_strcpy(buff, configGet()->http_url);
+        strreplace(buff, "%t", temperatureToString(), sizeof(buff));
+        strreplace(buff, "%h", humidityToString(), sizeof(buff));
+        strreplace(buff, "%p", pressureToString(), sizeof(buff));
+        strreplace(buff, "%v", batteryVoltageToString(), sizeof(buff));
+       }
+  if(!http_get(buff, "", httpPushCb)) return 1;
   //os_printf("Push: URL=%s\n", buff);
   return 0;
  }

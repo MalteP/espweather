@@ -3,7 +3,7 @@
 // #############################################################################
 // # config.h - Load or save configuration in flash, config button handler     #
 // #############################################################################
-// #            Version: 1.1 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
+// #            Version: 1.2 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
 // #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
 // #############################################################################
 // #  This program is free software; you can redistribute it and/or modify it  #
@@ -57,7 +57,7 @@
 
  #define URL_DEFAULT "http://example.com/sensor.php?temperature=%t&humidity=%h&pressure=%p&voltage=%v"
  #define KEY_DEFAULT ""
- #define GRP_DEFAULT "ESP_Weather"
+ #define GRP_DEFAULT ""
 
  // Default data for MQTT
  #define MQTT_HOST   "example.com"

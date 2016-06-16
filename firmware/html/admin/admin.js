@@ -270,8 +270,16 @@ function render_sensor_services()
    if(item.id==http_enabled)
     {
      option.set("@selected", "true");
-     if(item.key_visible==true) $("#http-key-div").show(); else $("#http-key-div").hide();
-     if(item.grp_visible==true) $("#http-grp-div").show(); else $("#http-grp-div").hide();
+     if(item.key_label!="")
+      {
+       $("#http-key-label").fill(item.key_label);
+       $("#http-key-div").show();
+      } else $("#http-key-div").hide();
+     if(item.grp_label!="")
+      {
+       $("#http-grp-label").fill(item.grp_label);
+       $("#http-grp-div").show();
+      } else $("#http-grp-div").hide();
      if(item.url_visible==true) $("#http-url-div").show(); else $("#http-url-div").hide();
     }
    $("#http-enabled").add(option);

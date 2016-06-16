@@ -3,7 +3,7 @@
 // #############################################################################
 // # push.h - Push data to HTTP service or MQTT server                         #
 // #############################################################################
-// #            Version: 1.1 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
+// #            Version: 1.2 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
 // #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
 // #############################################################################
 // #  This program is free software; you can redistribute it and/or modify it  #
@@ -34,6 +34,7 @@
 
  #define HTTP_THINGSPEAK "http://api.thingspeak.com/update?api_key=%s&field1=%s&field2=%s&field3=%s&field4=%s"
  #define HTTP_ADAFRUIT   "http://io.adafruit.com/api/groups/%s/send.json?x-aio-key=%s&temperature=%s&humidity=%s&pressure=%s&voltage=%s"
+ #define HTTP_SPARKFUN   "http://data.sparkfun.com/input/%s?private_key=%s&temperature=%s&humidity=%s&pressure=%s&voltage=%s"
 
  void pushSensorData( void );
  void pushTimer( void );
