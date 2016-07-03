@@ -63,7 +63,7 @@ If you don't want to modify the firmware, you might skip the next steps and [fla
 First we will install all necessary packages to compile the toolchain. On a minimal Fedora 23 Linux use the following commands:
 
 ```
-sudo dnf install make autoconf automake libtool gcc gcc-c++ gperf flex bison texinfo gawk ncurses-devel expat-devel python pyserial sed git unzip wget bzip2 patch
+sudo dnf install make autoconf automake libtool gcc gcc-c++ gperf flex bison texinfo gawk ncurses-devel expat-devel python pyserial python-devel sed git unzip wget bzip2 patch help2man
 
 sudo dnf install http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm 
 sudo dnf install http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
