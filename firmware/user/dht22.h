@@ -3,7 +3,7 @@
 // #############################################################################
 // # dht22.h - Functions for DHT22 temperature / humidity sensor               #
 // #############################################################################
-// #            Version: 1.1 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
+// #            Version: 1.2 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
 // #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
 // #############################################################################
 // #  This program is free software; you can redistribute it and/or modify it  #
