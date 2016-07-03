@@ -1,4 +1,3 @@
-
 # --------------- esphttpd config options ---------------
 
 # If GZIP_COMPRESSION is set to "yes" then the static css, js, and html files will be compressed with gzip before added to the espfs image
@@ -27,9 +26,12 @@ YUI-COMPRESSOR ?= /usr/bin/yui-compressor
 #any support in the browser.
 USE_HEATSHRINK ?= yes
 
+# Enable SSL Support for HTTP and MQTT client
+ENABLE_SSL ?= yes
+
 #Position and maximum length of espfs in flash memory
-ESPFS_POS = 0x12000
-ESPFS_SIZE = 0x2E000
+ESPFS_POS = 0x20000
+ESPFS_SIZE = 0x1B000
 
 # -------------- End of esphttpd config options -------------
 
@@ -48,16 +50,13 @@ SDK_BASE	?= /opt/esp-open-sdk/sdk
 
 #Esptool.py path and port
 ESPTOOL		?= /opt/esp-open-sdk/esptool/esptool.py
-ESPPORT		?= /dev/ttyUSB1
+ESPPORT		?= /dev/ttyUSB0
 #ESPDELAY indicates seconds to wait between flashing the two binary images
 ESPDELAY	?= 3
 ESPBAUD		?= 115200
 
 # name for the target project
 TARGET		= espweather
-
-
-
 
 # version strings
 VERSION 	= $(shell cat VERSION)
@@ -72,13 +71,19 @@ EXTRA_INCDIR	= include \
 		  lib/httpclient/
 
 # libraries used in this project, mainly provided by the SDK
-LIBS		= c gcc hal phy pp net80211 lwip wpa main ssl
+LIBS		= c gcc hal phy pp net80211 lwip wpa main
 
 # compiler flags using during compilation of source files
 CFLAGS		= -Os -std=c99 -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions \
 		  -nostdlib -mlongcalls -mtext-section-literals -D__ets__ -DICACHE_FLASH \
 		  -Wno-address -DESPFS_POS=$(ESPFS_POS) -DESPFS_SIZE=$(ESPFS_SIZE) \
 		  -DVERSTRING=\"$(VERSION)\" -DHOSTSTRING=\"$(USERNAME)@$(HOSTNAME)\"
+
+# extra options for ssl support
+ifeq ("$(ENABLE_SSL)","yes")
+LIBS		+= ssl
+CFLAGS		+= -DENABLE_SSL
+endif
 
 # linker flags used to generate the main object file
 LDFLAGS		= -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static
@@ -113,7 +118,9 @@ LIBS		:= $(addprefix -l,$(LIBS))
 APP_AR		:= $(addprefix $(BUILD_BASE)/,$(TARGET)_app.a)
 TARGET_OUT	:= $(addprefix $(BUILD_BASE)/,$(TARGET).out)
 
-LD_SCRIPT	:= $(addprefix -T$(SDK_BASE)/$(SDK_LDDIR)/,$(LD_SCRIPT))
+LD_SCRIPT_ORIG	:= $(addprefix $(SDK_BASE)/$(SDK_LDDIR)/,$(LD_SCRIPT))
+LD_SCRIPT_NEW	:= $(addprefix $(BUILD_BASE)/,$(LD_SCRIPT))
+LD_SCRIPT	:= -T$(LD_SCRIPT_NEW)
 
 INCDIR	:= $(addprefix -I,$(SRC_DIR))
 EXTRA_INCDIR	:= $(addprefix -I,$(EXTRA_INCDIR))
@@ -144,11 +151,15 @@ $1/%.o: %.c
 	$(Q) $(CC) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CFLAGS)  -c $$< -o $$@
 endef
 
-.PHONY: all checkdirs clean webpages.espfs
+.PHONY: all checkdirs clean $(FW_BASE)/webpages.espfs
 
 all: checkdirs $(TARGET_OUT) $(FW_BASE) size
 
-$(TARGET_OUT): $(APP_AR)
+$(LD_SCRIPT_NEW):
+	$(vecho) "GEN $@"
+	$(Q) cat $(LD_SCRIPT_ORIG) | sed "s/irom0_0_seg : .*/irom0_0_seg :                         org = 0x4023B000, len = 0x40000/g" > $(LD_SCRIPT_NEW)
+
+$(TARGET_OUT): $(APP_AR) $(LD_SCRIPT_NEW)
 	$(vecho) "LD $@"
 	$(Q) $(LD) -L$(SDK_LIBDIR) $(LD_SCRIPT) $(LDFLAGS) -Wl,--start-group $(LIBS) $(APP_AR) -Wl,--end-group -o $@
 
@@ -166,14 +177,13 @@ checkdirs: $(BUILD_DIR)
 $(BUILD_DIR):
 	$(Q) mkdir -p $@
 
-
 size:
 	$(Q) $(SIZE) -t $(APP_AR)
 
-flash: $(TARGET_OUT) $(FW_BASE)
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x00000 $(FW_BASE)/0x00000.bin 0x40000 $(FW_BASE)/0x40000.bin
+flash: checkdirs $(TARGET_OUT) $(FW_BASE)
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x00000 $(FW_BASE)/0x00000.bin 0x3B000 $(FW_BASE)/0x3b000.bin
 
-webpages.espfs: html/ html/admin/ lib/espfs/mkespfsimage/mkespfsimage
+$(FW_BASE)/webpages.espfs: html/ html/admin/ lib/espfs/mkespfsimage/mkespfsimage
 ifeq ("$(COMPRESS_W_YUI)","yes")
 	$(Q) rm -rf html_compressed;
 	$(Q) cp -r html html_compressed;
@@ -184,10 +194,13 @@ ifeq ("$(COMPRESS_W_YUI)","yes")
 
 # mkespfsimage will compress html, css and js files with gzip by default if enabled
 # override with -g cmdline parameter
-	$(Q) cd html_compressed; find  | ../lib/espfs/mkespfsimage/mkespfsimage > ../webpages.espfs; cd ..;
+	$(Q) cd html_compressed; find  | ../lib/espfs/mkespfsimage/mkespfsimage > ../$(FW_BASE)/webpages.espfs; cd ..;
 else
-	$(Q) cd html; find | ../lib/espfs/mkespfsimage/mkespfsimage > ../webpages.espfs; cd ..
+	$(Q) cd html; find | ../lib/espfs/mkespfsimage/mkespfsimage > ../$(FW_BASE)/webpages.espfs; cd ..
 endif
+
+defaultflash:
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x7C000 $(SDK_BASE)/bin/esp_init_data_default.bin
 
 blankflash:
 	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x7E000 $(SDK_BASE)/bin/blank.bin
@@ -195,15 +208,16 @@ blankflash:
 lib/espfs/mkespfsimage/mkespfsimage: lib/espfs/mkespfsimage/
 	$(Q) $(MAKE) -C lib/espfs/mkespfsimage USE_HEATSHRINK="$(USE_HEATSHRINK)" GZIP_COMPRESSION="$(GZIP_COMPRESSION)"
 
-htmlflash: webpages.espfs
-	$(Q) if [ $$(stat -c '%s' webpages.espfs) -gt $$(( $(ESPFS_SIZE) )) ]; then echo "webpages.espfs too big!"; false; fi
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash $(ESPFS_POS) webpages.espfs
+htmlflash: $(FW_BASE)/webpages.espfs
+	$(Q) if [ $$(stat -c '%s' $(FW_BASE)/webpages.espfs) -gt $$(( $(ESPFS_SIZE) )) ]; then echo "webpages.espfs too big!"; false; fi
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash $(ESPFS_POS) $(FW_BASE)/webpages.espfs
 
-image: checkdirs $(TARGET_OUT) $(FW_BASE) webpages.espfs
-	$(Q) dd if=/dev/zero count=$$((16#40000+`wc -c < $(FW_BASE)/0x40000.bin`)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+image: checkdirs $(TARGET_OUT) $(FW_BASE) $(FW_BASE)/webpages.espfs
+	$(Q) dd if=/dev/zero count=$$((16#80000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
 	$(Q) dd if=$(FW_BASE)/0x00000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#00000)) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=$(FW_BASE)/0x40000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#40000)) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=webpages.espfs of=$(FW_BASE)/firmware.bin seek=$$((16#`echo $(ESPFS_POS) | cut -c 3-`)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/webpages.espfs of=$(FW_BASE)/firmware.bin seek=$$((16#`echo $(ESPFS_POS) | cut -c 3-`)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/0x3b000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#3B000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((16#7C000)) oflag=seek_bytes conv=notrunc status=none
 
 clean:
 	$(Q) rm -f $(APP_AR)
@@ -212,7 +226,6 @@ clean:
 	$(Q) find $(BUILD_BASE) -maxdepth 1 -type d ! -name "$(BUILD_BASE)" | xargs rm -rf
 	$(Q) make -C lib/espfs/mkespfsimage/ clean
 	$(Q) rm -rf $(FW_BASE)
-	$(Q) rm -f webpages.espfs
 ifeq ("$(COMPRESS_W_YUI)","yes")
 	$(Q) rm -rf html_compressed
 endif

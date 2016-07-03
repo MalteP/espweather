@@ -30,7 +30,7 @@
  #define LEDGPIO 14
 
  // Flash position for config data
- #define ESP_PARAM_SEC 0x7A
+ #define ESP_PARAM_SEC 0x7B
 
  // RTC magic value for detecting first start
  #define RTC_MAGIC 0xC0DEBABE

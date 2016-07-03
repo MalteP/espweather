@@ -200,7 +200,7 @@ uint8_t ICACHE_FLASH_ATTR mqttPush( void )
   if(configGet()->mqtt_enabled==0) return 1;
   os_printf("Push: MQTT\n");
   os_sprintf(id_str, "ESP_Weather%06X", system_get_chip_id());
-  MQTT_InitConnection(&mqttClient, configGet()->mqtt_host, configGet()->mqtt_port, 0);
+  MQTT_InitConnection(&mqttClient, configGet()->mqtt_host, configGet()->mqtt_port, (configGet()->mqtt_enabled==1?0:1));
   MQTT_InitClient(&mqttClient, id_str, configGet()->mqtt_user, configGet()->mqtt_pass, 120, 1);
   MQTT_OnConnected(&mqttClient, mqttPushCb);
   MQTT_OnDisconnected(&mqttClient, NULL);

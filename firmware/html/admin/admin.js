@@ -290,6 +290,10 @@ function render_sensor_services()
    if(item.id==mqtt_enabled)
     {
      option.set("@selected", "true");
+     if(services.mqtt_default_ports[index]!=""&&services.mqtt_default_ports.indexOf($("#mqtt-port").get("value"))>0)
+      {
+       $("#mqtt-port").set("value", services.mqtt_default_ports[index]);
+      }
      if(item.settings_visible==true) $("#mqtt-div").show(); else $("#mqtt-div").hide();
     }
    $("#mqtt-enabled").add(option);
