@@ -21,6 +21,7 @@ function init_admin()
   $("#btn-sensor").onClick(function() {showtab(1)});
   $("#btn-user").onClick(function() {showtab(2)});
   $("#btn-system").onClick(function() {showtab(3)});
+  $("#networks-toggle").onClick(function() {toggle_wifi_manual()});
   $("#btn-save").onClick(function() {save_settings(0)});
   $("#wifi-dhcp").onChange(function() {change_wifi_settings()});
   $("#http-enabled").onChange(function() {change_sensor_settings()});
@@ -145,6 +146,20 @@ function change_wifi_settings()
  {
   wifi_dhcp = $("#wifi-dhcp").get("value");
   render_wifi_settings();
+ }
+
+
+// Toggle manual WiFi SSID settings
+function toggle_wifi_manual()
+ {
+  if($("#networks").get("$display")=="none")
+   {
+    $("#networks").show();
+    $("#networks-manual").hide();
+   } else {
+    $("#networks").hide();
+    $("#networks-manual").show();
+   }
  }
 
 

@@ -130,6 +130,18 @@ p.main-header
   width: 100%;
  }
 
+#networks-manual
+ {
+  display: none;
+ }
+
+#networks-toggle
+ {
+  margin: 10px 0px 10px 80px;
+  font-size: 0.8em;
+  text-decoration: underline;
+ }
+
 .network-node
  {
   display: table-row;

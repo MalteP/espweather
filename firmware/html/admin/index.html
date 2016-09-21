@@ -37,11 +37,14 @@
         <p>Loading networks...</p>
        </div>
       </div>
+      <div id="networks-manual">
+       <label for="wifi-essid">SSID</label><br />
+       <input type="text" id="wifi-essid" maxlength="63"><br />
+      </div>
       <br />
-      <input type="hidden" id="wifi-essid" maxlength="63">
       <label for="wifi-pass">WiFi password, if applicable</label><br />
       <input type="password" id="wifi-pass" maxlength="63"><br />
-      <br />
+      <p id="networks-toggle">Hidden network?</p>
       <br />
       <label for="wifi-dhcp">Address configuration</label><br />
       <select id="wifi-dhcp"><option value="0">Static</option><option value="1">DHCP</option></select><br />
