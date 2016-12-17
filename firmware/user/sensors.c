@@ -41,6 +41,7 @@ int temphum_valid = -1;
 int pressure_valid = -1;
 
 int read_limit = 0;
+int in_progress = 0;
 
 char temperature[8];
 char humidity[8];
@@ -68,9 +69,10 @@ void ICACHE_FLASH_ATTR sensorsInit( void )
   // to get a little bit confused and needs some delay before first read after boot...
   if(sht1x_available!=0)
    {
+    in_progress = 1;
     os_timer_disarm(&sensorsTimer);
     os_timer_setfn(&sensorsTimer, sensorsReadCb, NULL);
-    os_timer_arm(&sensorsTimer, 250, 0);
+    os_timer_arm(&sensorsTimer, 500, 0);
    } else {
     sensorsRead();
    }
@@ -90,6 +92,7 @@ void ICACHE_FLASH_ATTR sensorsRead( void )
   static ETSTimer limitTimer;
   if(read_limit!=0) return;
   read_limit = 1;
+  in_progress = 1;
   temphum_valid = -1;
   pressure_valid = -1;
   if(sht1x_available==0)
@@ -107,6 +110,7 @@ void ICACHE_FLASH_ATTR sensorsRead( void )
       pressure_valid = bmpReadSensor(&bmp180);
      }
    }
+  in_progress = 0;
   // Reading the sensor is only allowed every 5 sec.
   os_timer_disarm(&limitTimer);
   os_timer_setfn(&limitTimer, readLimitCb, NULL);
@@ -118,6 +122,13 @@ void ICACHE_FLASH_ATTR sensorsRead( void )
 void ICACHE_FLASH_ATTR readLimitCb( void *arg )
  {
   read_limit = 0;
+ }
+
+
+// Wait for sensors?
+int sensorsDone( void )
+ {
+  return in_progress;
  }
 
 

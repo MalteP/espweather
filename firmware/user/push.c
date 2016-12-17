@@ -32,15 +32,17 @@
 enum push_states pushState;
 uint8_t pushErrorDelay;
 uint8_t pushRetries;
+uint8_t pushRedirect;
 MQTT_Client mqttClient;
 
 
 // Start sensor data push
 void ICACHE_FLASH_ATTR pushSensorData( void )
  {
-  pushState = PUSH_IPWAIT;
+  pushState = PUSH_INIT;
   pushErrorDelay = 0;
   pushRetries = 0;
+  pushRedirect = 0;
   os_printf("Push: Start\n");
   statusLed(LED_FLASH1);
   pushTimer();
@@ -66,13 +68,22 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
    {
     case PUSH_IDLE:
      break;
-    case PUSH_IPWAIT:
+    case PUSH_INIT:
+     // Check if push neccesary
      if(!configGet()->http_enabled&&!configGet()->mqtt_enabled)
       {
        pushState = PUSH_FINISH;
        break;
       }
      statusLed(LED_FLASH1);
+     // Sensor data available?
+     if(sensorsDone()==0)
+      {
+       ++pushState;
+      }
+     break;
+    case PUSH_IPWAIT:
+     // IP address available?
      tmp = wifi_station_get_connect_status();
      if(tmp==STATION_GOT_IP)
       {
@@ -80,11 +91,14 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
       }
      break;
     case PUSH_HTTPSTART:
+     // Initialize HTTP
      pushRetries = 0;
      ++pushState;
      break;
     case PUSH_HTTP:
+     // Push data via HTTP
      statusLed(LED_FLASH2);
+     pushRedirect = PUSH_REDIRECT_MAX;
      if(httpPush()==0&&pushRetries<(PUSH_RETRIES_MAX-1))
       {
        ++pushState;
@@ -93,6 +107,7 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
       }
      break;
     case PUSH_HTTPWAIT:
+     // Wait for status update
      if(pushErrorDelay>0)
       {
        statusLed(LED_FLASH3);
@@ -100,10 +115,12 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
       }
      break;
     case PUSH_MQTTSTART:
+     // Initialize MQTT
      pushRetries = 0;
      ++pushState;
      break;
     case PUSH_MQTT:
+     // Push data via MQTT
      statusLed(LED_FLASH2);
      if(mqttPush()==0&&pushRetries<(PUSH_RETRIES_MAX-1))
       {
@@ -113,6 +130,7 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
       }
      break;
     case PUSH_MQTTWAIT:
+     // Wait for status update
      if(pushErrorDelay>0)
       {
        statusLed(LED_FLASH3);
@@ -120,6 +138,7 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
       }
      break;
     case PUSH_FINISH:
+     // Finish sending data
      statusLed(LED_OFF);
      os_printf("Push: Done\n");
      if(configIsFirstStart())
@@ -132,6 +151,7 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
      pushState = PUSH_IDLE;
      break;
     default:
+     // Should not happen
      pushState = PUSH_IDLE;
      break;
    }
@@ -140,6 +160,7 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
     pushTimer();
    }
  }
+
 
 
 // Push via HTTP
@@ -162,6 +183,7 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
      } else
       if(mode==3)
        {
+        // data.sparkfun.com
         os_sprintf(buff, HTTP_SPARKFUN, configGet()->http_key, configGet()->http_grp, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
        } else {
         // Custom URL
@@ -180,15 +202,42 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
 // Callback for HTTP push
 void ICACHE_FLASH_ATTR httpPushCb( char *response, int http_status, char *full_response )
  {
+  char* tmp;
+  char buff[256];
   // Request successful?
   if(http_status==200)
    {
     ++pushState;
-   } else {
-    os_printf("Push: HTTP failed %d\n", http_status);
-    pushErrorDelay = PUSH_ERROR_DELAY+1;
-    ++pushRetries;
-   }
+   } else
+    if(http_status==301||http_status==302)
+    {
+     if(--pushRedirect==0)
+      {
+       os_printf("Push: Too many redirects\n");
+       ++pushState;
+      } else {
+       tmp = os_strstr(full_response, "Location: ");
+       if(tmp!=NULL)
+        {
+         tmp += 10;
+         strtok(tmp, "\r\n");
+         os_strncpy(buff, tmp, sizeof(buff));
+         buff[(sizeof(buff)-1)] = '\0';
+         //os_printf("Push: HTTP redirect\n");
+         if(!http_get(buff, "", httpPushCb))
+          {
+           pushErrorDelay = PUSH_ERROR_DELAY+1;
+           ++pushRetries;
+          }
+        } else {
+         pushErrorDelay = PUSH_ERROR_DELAY+1;
+         ++pushRetries;
+        }
+      }
+    } else {
+     pushErrorDelay = PUSH_ERROR_DELAY+1;
+     ++pushRetries;
+    }
  }
 
 

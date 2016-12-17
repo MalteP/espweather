@@ -25,6 +25,7 @@
 
  void sensorsInit( void );
  void sensorsRead( void );
+ int sensorsDone( void );
  char* temperatureToString( void );
  char* humidityToString( void );
  char* pressureToString( void );
