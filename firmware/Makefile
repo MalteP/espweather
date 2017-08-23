@@ -11,27 +11,30 @@
 #
 # Adding JPG or PNG files (and any other compressed formats) is not recommended, because GZIP compression does not works effectively on compressed files.
 
-#Static gzipping is disabled by default.
+# Static gzipping is disabled by default.
 GZIP_COMPRESSION ?= no
 
 # If COMPRESS_W_YUI is set to "yes" then the static css and js files will be compressed with yui-compressor
 # This option works only when GZIP_COMPRESSION is set to "yes"
 # http://yui.github.io/yuicompressor/
-#Disabled by default.
+# Disabled by default.
 COMPRESS_W_YUI ?= yes
 YUI-COMPRESSOR ?= /usr/bin/yui-compressor
 
-#If USE_HEATSHRINK is set to "yes" then the espfs files will be compressed with Heatshrink and decompressed
-#on the fly while reading the file. Because the decompression is done in the esp8266, it does not require
-#any support in the browser.
+# If USE_HEATSHRINK is set to "yes" then the espfs files will be compressed with Heatshrink and decompressed
+# on the fly while reading the file. Because the decompression is done in the esp8266, it does not require
+# any support in the browser.
 USE_HEATSHRINK ?= yes
 
 # Enable SSL Support for HTTP and MQTT client
 ENABLE_SSL ?= yes
 
-#Position and maximum length of espfs in flash memory
+# Flash size of ESP module in MBit (4m: 512KB / 8m: 1MB)
+FLASH_SIZE ?= 4m
+
+# Position and maximum length of espfs in flash memory
 ESPFS_POS = 0x20000
-ESPFS_SIZE = 0x1B000
+ESPFS_SIZE = 0x16000
 
 # -------------- End of esphttpd config options -------------
 
@@ -48,10 +51,10 @@ XTENSA_TOOLS_ROOT ?= /opt/esp-open-sdk/xtensa-lx106-elf/bin/
 # base directory of the ESP8266 SDK package, absolute
 SDK_BASE	?= /opt/esp-open-sdk/sdk
 
-#Esptool.py path and port
+# Esptool.py path and port
 ESPTOOL		?= /opt/esp-open-sdk/esptool/esptool.py
 ESPPORT		?= /dev/ttyUSB0
-#ESPDELAY indicates seconds to wait between flashing the two binary images
+# ESPDELAY indicates seconds to wait between flashing the two binary images
 ESPDELAY	?= 3
 ESPBAUD		?= 115200
 
@@ -157,7 +160,7 @@ all: checkdirs $(TARGET_OUT) $(FW_BASE) size
 
 $(LD_SCRIPT_NEW):
 	$(vecho) "GEN $@"
-	$(Q) cat $(LD_SCRIPT_ORIG) | sed "s/irom0_0_seg : .*/irom0_0_seg :                         org = 0x4023B000, len = 0x40000/g" > $(LD_SCRIPT_NEW)
+	$(Q) cat $(LD_SCRIPT_ORIG) | sed "s/irom0_0_seg : .*/irom0_0_seg :                         org = 0x40236000, len = 0x44000/g" > $(LD_SCRIPT_NEW)
 
 $(TARGET_OUT): $(APP_AR) $(LD_SCRIPT_NEW)
 	$(vecho) "LD $@"
@@ -181,7 +184,7 @@ size:
 	$(Q) $(SIZE) -t $(APP_AR)
 
 flash: checkdirs $(TARGET_OUT) $(FW_BASE)
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x00000 $(FW_BASE)/0x00000.bin 0x3B000 $(FW_BASE)/0x3b000.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x00000 $(FW_BASE)/0x00000.bin 0x36000 $(FW_BASE)/0x36000.bin
 
 $(FW_BASE)/webpages.espfs: html/ html/admin/ lib/espfs/mkespfsimage/mkespfsimage
 ifeq ("$(COMPRESS_W_YUI)","yes")
@@ -200,24 +203,37 @@ else
 endif
 
 defaultflash:
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x7C000 $(SDK_BASE)/bin/esp_init_data_default.bin
-
-blankflash:
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash 0x7E000 $(SDK_BASE)/bin/blank.bin
+ifeq ("$(FLASH_SIZE)","4m")
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7B000 $(SDK_BASE)/bin/blank.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7C000 $(SDK_BASE)/bin/esp_init_data_default.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7E000 $(SDK_BASE)/bin/blank.bin
+else
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFB000 $(SDK_BASE)/bin/blank.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFC000 $(SDK_BASE)/bin/esp_init_data_default.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFE000 $(SDK_BASE)/bin/blank.bin
+endif
 
 lib/espfs/mkespfsimage/mkespfsimage: lib/espfs/mkespfsimage/
 	$(Q) $(MAKE) -C lib/espfs/mkespfsimage USE_HEATSHRINK="$(USE_HEATSHRINK)" GZIP_COMPRESSION="$(GZIP_COMPRESSION)"
 
 htmlflash: $(FW_BASE)/webpages.espfs
 	$(Q) if [ $$(stat -c '%s' $(FW_BASE)/webpages.espfs) -gt $$(( $(ESPFS_SIZE) )) ]; then echo "webpages.espfs too big!"; false; fi
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash $(ESPFS_POS) $(FW_BASE)/webpages.espfs
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) $(ESPFS_POS) $(FW_BASE)/webpages.espfs
 
 image: checkdirs $(TARGET_OUT) $(FW_BASE) $(FW_BASE)/webpages.espfs
+ifeq ("$(FLASH_SIZE)","4m")
 	$(Q) dd if=/dev/zero count=$$((16#80000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+else
+	$(Q) dd if=/dev/zero count=$$((16#100000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+endif
 	$(Q) dd if=$(FW_BASE)/0x00000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#00000)) oflag=seek_bytes conv=notrunc status=none
 	$(Q) dd if=$(FW_BASE)/webpages.espfs of=$(FW_BASE)/firmware.bin seek=$$((16#`echo $(ESPFS_POS) | cut -c 3-`)) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=$(FW_BASE)/0x3b000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#3B000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/0x36000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#36000)) oflag=seek_bytes conv=notrunc status=none
+ifeq ("$(FLASH_SIZE)","4m")
 	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((16#7C000)) oflag=seek_bytes conv=notrunc status=none
+else
+	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((16#FC000)) oflag=seek_bytes conv=notrunc status=none
+endif
 
 clean:
 	$(Q) rm -f $(APP_AR)
