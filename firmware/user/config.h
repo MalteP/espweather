@@ -64,7 +64,7 @@
  #define MQTT_PORT   1883 
  #define MQTT_USER   ""
  #define MQTT_PASS   ""
- #define MQTT_TOPIC  "/sensors/0"
+ #define MQTT_TOPIC  "sensors/0"
 
  // Default data IP configuration
  #define WIFI_DHCP   1
