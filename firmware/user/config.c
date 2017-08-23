@@ -173,7 +173,7 @@ void ICACHE_FLASH_ATTR configRestart( void )
   // Delay restart
   os_timer_disarm(&configWifiTimer);
   os_timer_setfn(&configWifiTimer, configRestartCb, NULL);
-  os_timer_arm(&configWifiTimer, 1000, 1);
+  os_timer_arm(&configWifiTimer, 1000, 0);
 }
 
 
