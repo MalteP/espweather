@@ -21,7 +21,6 @@
 // #############################################################################
 
 #include <esp8266.h>
-#include <i2c/i2c.h>
 #include "i2c-common.h"
 #include "bmp180.h"
 
@@ -29,20 +28,20 @@
 // Initialize sensor (read calibration data)
 int ICACHE_FLASH_ATTR bmpInit( struct bmpdata* d )
  {
-  i2c_init();
+  i2cInit();
   if(i2cWriteRegister8(BMP180_ADDR, BMP180_SRESET, BMP180_SRESET_V)!=0) return -1;
   // Read calibration data
-  d->ac1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC1, I2C_NO_STOP);
-  d->ac2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC2, I2C_NO_STOP);
-  d->ac3 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC3, I2C_NO_STOP);
-  d->ac4 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC4, I2C_NO_STOP);
-  d->ac5 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC5, I2C_NO_STOP);
-  d->ac6 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC6, I2C_NO_STOP);
-  d->b1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_B1, I2C_NO_STOP);
-  d->b2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_B2, I2C_NO_STOP);
-  d->mb = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MB, I2C_NO_STOP);
-  d->mc = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MC, I2C_NO_STOP);
-  d->md = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MD, I2C_NO_STOP);
+  d->ac1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC1);
+  d->ac2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC2);
+  d->ac3 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC3);
+  d->ac4 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC4);
+  d->ac5 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC5);
+  d->ac6 = (uint16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC6);
+  d->b1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_B1);
+  d->b2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_B2);
+  d->mb = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MB);
+  d->mc = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MC);
+  d->md = i2cReadRegister16(BMP180_ADDR, BMP180_REG_MD);
   //os_printf("BMP180 calibration values: AC1=%d, AC2=%d, AC3=%d, AC4=%u, AC5=%u, AC6=%u, B1=%d, B2=%d, MB=%d, MC=%d, MD=%d\n", d->ac1, d->ac2, d->ac3, d->ac4, d->ac5, d->ac6, d->b1, d->b2, d->mb, d->mc, d->md );
   return 0;
  }
@@ -56,12 +55,12 @@ int ICACHE_FLASH_ATTR bmpReadSensor( struct bmpdata* d )
   // Read uncompensated temperature value
   if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, BMP180_TEMP)!=0) return -1;
   os_delay_us(5000);
-  d->ut = i2cReadRegister16(BMP180_ADDR, BMP180_OUT_MSB, I2C_NO_STOP);
+  d->ut = i2cReadRegister16(BMP180_ADDR, BMP180_OUT_MSB);
   // Read uncompensated pressure value
   if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, 0x34+(BMP180_OSS<<6))!=0) return -1;
   os_delay_us(2000);
   os_delay_us(3000<<BMP180_OSS);
-  d->up = i2cReadRegister24(BMP180_ADDR, BMP180_OUT_MSB, I2C_NO_STOP) >> (8-BMP180_OSS);
+  d->up = i2cReadRegister24(BMP180_ADDR, BMP180_OUT_MSB) >> (8-BMP180_OSS);
   // Calculate temperature
   x1 = (d->ut - d->ac6) * d->ac5 / 32768;
   x2 = d->mc * 2048 / (x1 + d->md);

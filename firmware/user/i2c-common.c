@@ -25,20 +25,25 @@
 #include "i2c-common.h"
 
 
+void i2cInit( void )
+ {
+  i2c_init();
+ }
+
 // Write command to device
 int ICACHE_FLASH_ATTR i2cWriteCmd( uint8_t device, uint8_t value, uint8_t sendstop )
  {
   i2c_start();
   // Write address
   i2c_writeByte(device<<1);
-  if (!i2c_check_ack())
+  if(!i2c_check_ack())
    {
     i2c_stop();
     return -1;
    }
   // Write value
   i2c_writeByte(value);
-  if (!i2c_check_ack())
+  if(!i2c_check_ack())
    {
     i2c_stop();
     return -1;
@@ -51,10 +56,10 @@ int ICACHE_FLASH_ATTR i2cWriteCmd( uint8_t device, uint8_t value, uint8_t sendst
 // Write 8bit register via i2c
 int ICACHE_FLASH_ATTR i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t value )
  {
-  i2cWriteCmd( device, addr, I2C_NO_STOP );
+  i2cWriteCmd(device, addr, I2C_NO_STOP);
   // Write value
   i2c_writeByte(value);
-  if (!i2c_check_ack())
+  if(!i2c_check_ack())
    {
     i2c_stop();
     return -1;
@@ -65,40 +70,42 @@ int ICACHE_FLASH_ATTR i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t v
 
 
 // Read 16bit register via i2c
-int16_t ICACHE_FLASH_ATTR i2cReadRegister16( uint8_t device, uint8_t value, uint8_t sendstop )
+int16_t ICACHE_FLASH_ATTR i2cReadRegister16( uint8_t device, uint8_t value )
  {
   int16_t data;
-  if(i2cWriteCmd(device, value, sendstop)!=0)
+  if(i2cWriteCmd(device, value, I2C_NO_STOP)!=0)
    {
     return -1;
    }
-  // (Repeated) start
+  // Repeated start
   i2c_start();
   // Sensor read address
   i2c_writeByte((device<<1)|1);
-  if (!i2c_check_ack())
+  if(!i2c_check_ack())
    {
     i2c_stop();
     return -1;
    }
   // Read and return data
-  data = i2c_readByte()<<8;
+  data = i2c_readByte();
   i2c_send_ack(1);
+  data <<= 8;
   data |= i2c_readByte();
+  i2c_send_ack(0);
   i2c_stop();
   return data;
  }
 
 
 // Read 24bit register via i2c
-int32_t ICACHE_FLASH_ATTR i2cReadRegister24( uint8_t device, uint8_t value, uint8_t sendstop )
+int32_t ICACHE_FLASH_ATTR i2cReadRegister24( uint8_t device, uint8_t value )
  {
   int32_t data;
-  if(i2cWriteCmd(device, value, sendstop)!=0)
+  if(i2cWriteCmd(device, value, I2C_NO_STOP)!=0)
    {
     return -1;
    }
-  // (Repeated) start
+  // Repeated start
   i2c_start();
   // Sensor read address
   i2c_writeByte((device<<1)|1);
@@ -108,11 +115,14 @@ int32_t ICACHE_FLASH_ATTR i2cReadRegister24( uint8_t device, uint8_t value, uint
     return -1;
    }
   // Read and return data
-  data = i2c_readByte()<<16;
+  data = i2c_readByte();
   i2c_send_ack(1);
-  data |= i2c_readByte()<<8;
-  i2c_send_ack(1);
+  data <<= 8;
   data |= i2c_readByte();
+  i2c_send_ack(1);
+  data <<= 8;
+  data |= i2c_readByte();
+  i2c_send_ack(0);
   i2c_stop();
   return data;
  }

@@ -28,9 +28,10 @@
  #define I2C_SEND_STOP 1
 
  // Functions
+ void i2cInit( void );
  int i2cWriteCmd( uint8_t device, uint8_t value, uint8_t sendstop );
  int i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t value );
- int16_t i2cReadRegister16( uint8_t device, uint8_t value, uint8_t sendstop );
- int32_t i2cReadRegister24( uint8_t device, uint8_t value, uint8_t sendstop );
+ int16_t i2cReadRegister16( uint8_t device, uint8_t value );
+ int32_t i2cReadRegister24( uint8_t device, uint8_t value );
 
 #endif

@@ -21,7 +21,6 @@
 // #############################################################################
 
 #include <esp8266.h>
-#include <i2c/i2c.h>
 #include "i2c-common.h"
 #include "ms5637.h"
 
@@ -29,20 +28,20 @@
 // Initialize sensor (read calibration data)
 int ICACHE_FLASH_ATTR msInit( struct msdata* d )
  {
-  i2c_init();
+  i2cInit();
   if(i2cWriteCmd(MS5637_ADDR, MS5637_RESET, I2C_SEND_STOP)!=0) return -1; // Reset sensor
   // Read calibration data
   #ifdef MS5637_ENABLE_CRC_CHECK
-  d->c[0] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x00, I2C_SEND_STOP);
+  d->c[0] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x00);
   #else
   d->c[0] = 0;
   #endif
-  d->c[1] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x02, I2C_SEND_STOP);
-  d->c[2] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x04, I2C_SEND_STOP);
-  d->c[3] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x06, I2C_SEND_STOP);
-  d->c[4] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x08, I2C_SEND_STOP);
-  d->c[5] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0A, I2C_SEND_STOP);
-  d->c[6] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0C, I2C_SEND_STOP);
+  d->c[1] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x02);
+  d->c[2] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x04);
+  d->c[3] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x06);
+  d->c[4] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x08);
+  d->c[5] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0A);
+  d->c[6] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0C);
   d->c[7] = 0;
   #ifdef MS5637_ENABLE_CRC_CHECK
   if(msCheckCRC(&d->c[0])!=((d->c[0]>>12)&0x000F))
@@ -68,12 +67,12 @@ int ICACHE_FLASH_ATTR msReadSensor( struct msdata* d )
   if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D1|MS5637_OSR_PRES, I2C_SEND_STOP)!=0) return -1;
   os_delay_us(540);
   os_delay_us(540<<MS5637_OS_PRES);
-  d->d1 = (uint32_t) i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ, I2C_SEND_STOP);
+  d->d1 = (uint32_t) i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
   // Read D2: digital temperature value
   if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D2|MS5637_OSR_TEMP, I2C_SEND_STOP)!=0) return -1;
   os_delay_us(540);
   os_delay_us(540<<MS5637_OS_TEMP);
-  d->d2 = (uint32_t) i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ, I2C_SEND_STOP);
+  d->d2 = (uint32_t) i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
   //os_printf("MS5637 read: D1=%u, D2=%u\n", d->d1, d->d2);
   // Calculate temperature
   dt = d->d2 - (int32_t) d->c[5] * (1L<<8);
