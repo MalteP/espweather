@@ -36,7 +36,7 @@ int ICACHE_FLASH_ATTR cgiSensor(HttpdConnData *connData)
   httpdHeader(connData, "Expires", "0");
   httpdEndHeaders(connData);
   sensorsRead();
-  len=os_sprintf(buff, "{\n \"temperature\": \"%s\",\n \"humidity\": \"%s\",\n \"barometer\": \"%s\",\n \"battery\": \"%s\"\n}\n", temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString() );
+  len=os_sprintf(buff, "{\n \"temperature\": \"%s\",\n \"humidity\": \"%s\",\n \"barometer\": \"%s\",\n \"battery\": \"%s\"\n,\n \"rssi\": \"%s\"\n}\n", temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString(), rssiToString() );
   httpdSend(connData, buff, len);
   return HTTPD_CGI_DONE;
  }

@@ -47,6 +47,7 @@ char temperature[8];
 char humidity[8];
 char pressure[8];
 char battery[8];
+char rssi[8];
 
 void sensorsReadCb( void *arg );
 void readLimitCb( void *arg );
@@ -190,4 +191,16 @@ char* ICACHE_FLASH_ATTR batteryVoltageToString( void )
   battery[0]='\0';
   os_sprintf(battery, "%d.%03d", (battery_voltage/1000), abs(battery_voltage%1000));
   return battery;
+ }
+
+// Convert WiFi RSSI to string
+char* ICACHE_FLASH_ATTR rssiToString( void )
+ {
+  int rssi_value = wifi_station_get_rssi();
+  rssi[0]='\0';
+  if(rssi_value!=31) // 31 = Failure
+   {
+    os_sprintf(rssi, "%d", rssi_value);
+   }
+  return rssi;
  }

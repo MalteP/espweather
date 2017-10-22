@@ -174,17 +174,17 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
   if(mode==1)
    {
     // thingspeak.com
-    os_sprintf(buff, HTTP_THINGSPEAK, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
+    os_sprintf(buff, HTTP_THINGSPEAK, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString(), rssiToString());
    } else
     if(mode==2)
      {
       // adafruit.io
-      os_sprintf(buff, HTTP_ADAFRUIT, configGet()->http_grp, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
+      os_sprintf(buff, HTTP_ADAFRUIT, configGet()->http_grp, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString(), rssiToString());
      } else
       if(mode==3)
        {
         // data.sparkfun.com
-        os_sprintf(buff, HTTP_SPARKFUN, configGet()->http_key, configGet()->http_grp, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString());
+        os_sprintf(buff, HTTP_SPARKFUN, configGet()->http_key, configGet()->http_grp, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString(), rssiToString());
        } else {
         // Custom URL
         os_strcpy(buff, configGet()->http_url);
@@ -192,6 +192,7 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
         strreplace(buff, "%h", humidityToString(), sizeof(buff));
         strreplace(buff, "%p", pressureToString(), sizeof(buff));
         strreplace(buff, "%v", batteryVoltageToString(), sizeof(buff));
+        strreplace(buff, "%r", rssiToString(), sizeof(buff));
        }
   if(!http_get(buff, "", httpPushCb)) return 1;
   //os_printf("Push: URL=%s\n", buff);
@@ -269,6 +270,7 @@ void ICACHE_FLASH_ATTR mqttPushCb(uint32_t *args)
   mqttPublish(client, configGet()->mqtt_topic, "humidity", humidityToString());
   mqttPublish(client, configGet()->mqtt_topic, "pressure", pressureToString());
   mqttPublish(client, configGet()->mqtt_topic, "battery", batteryVoltageToString());
+  mqttPublish(client, configGet()->mqtt_topic, "rssi", rssiToString());
  }
 
 

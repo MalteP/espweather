@@ -30,5 +30,6 @@
  char* humidityToString( void );
  char* pressureToString( void );
  char* batteryVoltageToString( void );
+ char* rssiToString( void );
 
 #endif

@@ -19,7 +19,7 @@ function refresh_weather()
   $.request("get", "sensors.cgi")
    .then(function(txt) {
     var json = $.parseJSON(txt);
-    set_values(json.temperature, json.humidity, json.barometer, json.battery);
+    set_values(json.temperature, json.humidity, json.barometer, json.battery, json.rssi);
    })
    .error(function(status, responseText, xhr) {
     error_ui("Could not load sensor data!", xhr);
@@ -29,14 +29,16 @@ function refresh_weather()
 
 
 // Set values
-function set_values( temperature, humidity, barometer, battery )
+function set_values( temperature, humidity, barometer, battery, rssi )
  {
   if(temperature=="") temperature = "--.-";
   if(humidity=="") humidity = "--.-";
   if(barometer=="") barometer = "----";
   if(battery=="") battery = "-.---";
+  if(rssi=="") rssi = "---";
   $("#temperature").fill(HTML(temperature +" &deg;C"));
   $("#humidity").fill(HTML(humidity +" %RH"));
   $("#barometer").fill(HTML(barometer +" hPa"));
   $("#battery").fill(HTML(battery +" V"));
+  $("#rssi").fill(HTML(rssi +" dBm"));
  }

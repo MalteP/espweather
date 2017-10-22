@@ -55,7 +55,7 @@
 
  // Default data for cloud service
 
- #define URL_DEFAULT "http://example.com/sensor.php?temperature=%t&humidity=%h&pressure=%p&voltage=%v"
+ #define URL_DEFAULT "http://example.com/sensor.php?temperature=%t&humidity=%h&pressure=%p&voltage=%v&rssi=%r"
  #define KEY_DEFAULT ""
  #define GRP_DEFAULT ""
 
