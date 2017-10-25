@@ -67,7 +67,7 @@ USERNAME	= $(shell whoami)
 HOSTNAME	= $(shell hostname)
 
 # which modules (subdirectories) of the project to include in compiling
-MODULES		= lib/espfs lib/httpd lib/httpclient lib/mqtt driver driver/i2c user
+MODULES		= lib/espfs lib/httpd lib/httpclient lib/mqtt user
 EXTRA_INCDIR	= include \
 		  . \
 		  lib/heatshrink/ \

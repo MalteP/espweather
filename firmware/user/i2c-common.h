@@ -23,7 +23,27 @@
 #ifndef I2C_COMMON_H
  #define I2C_COMMON_H
 
- // Send I2C stop before repeated start?
+ // Ports & registers
+ #define I2C_SDA_MUX  PERIPHS_IO_MUX_GPIO4_U
+ #define I2C_SDA_FUNC FUNC_GPIO4
+ #define I2C_SDA_PIN  4
+
+ #define I2C_SCL_MUX  PERIPHS_IO_MUX_GPIO5_U
+ #define I2C_SCL_FUNC FUNC_GPIO5
+ #define I2C_SCL_PIN  5
+
+ // Port macros
+ #define I2C_SDA_HIGH() gpio_output_set(1 << I2C_SDA_PIN, 0, 1 << I2C_SDA_PIN, 0)
+ #define I2C_SDA_LOW()  gpio_output_set(0, 1 << I2C_SDA_PIN, 1 << I2C_SDA_PIN, 0)
+ #define I2C_SCK_HIGH() gpio_output_set(1 << I2C_SCL_PIN,  0, 1 << I2C_SCL_PIN,  0)
+ #define I2C_SCK_LOW()  gpio_output_set(0,  1 << I2C_SCL_PIN, 1 << I2C_SCL_PIN,  0)
+ #define I2C_SDA_READ() GPIO_INPUT_GET(GPIO_ID_PIN(I2C_SDA_PIN))
+
+ // Timings
+ #define I2C_DELAY_US 10
+ #define I2C_DELAY()  os_delay_us(I2C_DELAY_US)
+
+ // Send stop in i2cWriteCmd()
  #define I2C_NO_STOP   0
  #define I2C_SEND_STOP 1
 
@@ -33,5 +53,11 @@
  int i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t value );
  int16_t i2cReadRegister16( uint8_t device, uint8_t value );
  int32_t i2cReadRegister24( uint8_t device, uint8_t value );
+
+ // Low level functions
+ int i2cSendStart( void );
+ int i2cSendStop( void );
+ int i2cWriteByte( int byte );
+ int i2cReadByte( int ack );
 
 #endif
