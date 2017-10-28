@@ -204,10 +204,23 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
 void ICACHE_FLASH_ATTR httpPushCb( char *response, int http_status, char *full_response )
  {
   char* tmp;
+  int value;
   char buff[256];
   // Request successful?
   if(http_status==200)
    {
+    tmp = os_strstr(full_response, "X-Interval-Override: ");
+    if(tmp!=NULL)
+     {
+      // Set temporary interval (min 30s / max 6h)
+      tmp += 21;
+      strtok(tmp, "\r\n");
+      value = atoi(tmp);
+      if(value>=30&&value<=21600)
+       {
+        configGet()->sensor_interval = value;
+       }
+     }
     ++pushState;
    } else
     if(http_status==301||http_status==302)
