@@ -73,7 +73,10 @@ int ICACHE_FLASH_ATTR i2cWriteCmd( uint8_t device, uint8_t value, uint8_t sendst
 // Write 8bit register via i2c
 int ICACHE_FLASH_ATTR i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t value )
  {
-  i2cWriteCmd(device, addr, I2C_NO_STOP);
+  if(i2cWriteCmd(device, addr, I2C_NO_STOP)!=0)
+   {
+    return -1;
+   }
   // Write value
   if(i2cWriteByte(value))
    {

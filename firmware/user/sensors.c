@@ -24,16 +24,19 @@
 #include "sensors.h"
 #include "dht22.h"
 #include "sht1x.h"
+#include "sht3x.h"
 #include "bmp180.h"
 #include "ms5637.h"
 #include "battery.h"
 
 struct shtdata sht1x;
+struct sht3data sht3x;
 struct dhtdata dht22;
 struct msdata ms5637;
 struct bmpdata bmp180;
 
 int sht1x_available = -1;
+int sht3x_available = -1;
 int ms5637_available = -1;
 int bmp180_available = -1;
 
@@ -57,11 +60,12 @@ void readLimitCb( void *arg );
 void ICACHE_FLASH_ATTR sensorsInit( void )
  {
   static ETSTimer sensorsTimer;
+  sht3x_available = sht3Init(&sht3x);
   sht1x_available = shtInit(&sht1x);
   dht22Init(&dht22);
   ms5637_available = msInit(&ms5637);
   bmp180_available = bmpInit(&bmp180);
-  os_printf("Sensors: SHT=%c, DHT=?, MS=%c, BMP=%c\n", (sht1x_available==0?'y':'n'), (ms5637_available==0?'y':'n'), (bmp180_available==0?'y':'n'));
+  os_printf("Sensors: SHT3x=%c, SHT1x=%c, DHT=?, MS=%c, BMP=%c\n", (sht3x_available==0?'y':'n'), (sht1x_available==0?'y':'n'), (ms5637_available==0?'y':'n'), (bmp180_available==0?'y':'n'));
   temperature[0]='\0';
   humidity[0]='\0';
   pressure[0]='\0';
@@ -96,11 +100,16 @@ void ICACHE_FLASH_ATTR sensorsRead( void )
   in_progress = 1;
   temphum_valid = -1;
   pressure_valid = -1;
-  if(sht1x_available==0)
+  if(sht3x_available==0)
    {
-    temphum_valid = shtRead(&sht1x);
+    temphum_valid = sht3Read(&sht3x);
    } else {
-    temphum_valid = dht22Read(&dht22);
+    if(sht1x_available==0)
+     {
+      temphum_valid = shtRead(&sht1x);
+     } else {
+      temphum_valid = dht22Read(&dht22);
+     }
    }
   if(ms5637_available==0)
    {
@@ -138,11 +147,16 @@ char* ICACHE_FLASH_ATTR temperatureToString( void )
  {
   temperature[0]='\0';
   if(temphum_valid!=0) goto end;
-  if(sht1x_available==0)
+  if(sht3x_available==0)
    {
-    os_sprintf(temperature, "%d.%d", (sht1x.temperature/10), abs(sht1x.temperature%10));
+    os_sprintf(temperature, "%d.%d", (sht3x.temperature/100), abs(sht3x.temperature%100));
    } else {
-    os_sprintf(temperature, "%d.%d", (dht22.temperature/10), abs(dht22.temperature%10));
+    if(sht1x_available==0)
+     {
+      os_sprintf(temperature, "%d.%d", (sht1x.temperature/10), abs(sht1x.temperature%10));
+     } else {
+      os_sprintf(temperature, "%d.%d", (dht22.temperature/10), abs(dht22.temperature%10));
+     }
    }
   end:
   return temperature;
@@ -154,11 +168,16 @@ char* ICACHE_FLASH_ATTR humidityToString( void )
  {
   humidity[0]='\0';
   if(temphum_valid!=0) goto end;
-  if(sht1x_available==0)
+  if(sht3x_available==0)
    {
-    os_sprintf(humidity, "%d.%d", (sht1x.humidity/10), abs(sht1x.humidity%10));
+     os_sprintf(humidity, "%d.%d", (sht3x.humidity/100), abs(sht3x.humidity%100));
    } else {
-    os_sprintf(humidity, "%d.%d", (dht22.humidity/10), abs(dht22.humidity%10));
+    if(sht1x_available==0)
+     {
+      os_sprintf(humidity, "%d.%d", (sht1x.humidity/10), abs(sht1x.humidity%10));
+     } else {
+      os_sprintf(humidity, "%d.%d", (dht22.humidity/10), abs(dht22.humidity%10));
+     }
    }
   end:
   return humidity;
