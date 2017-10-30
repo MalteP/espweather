@@ -149,7 +149,7 @@ char* ICACHE_FLASH_ATTR temperatureToString( void )
   if(temphum_valid!=0) goto end;
   if(sht3x_available==0)
    {
-    os_sprintf(temperature, "%d.%d", (sht3x.temperature/100), abs(sht3x.temperature%100));
+    os_sprintf(temperature, "%d.%02d", (sht3x.temperature/100), abs(sht3x.temperature%100));
    } else {
     if(sht1x_available==0)
      {
@@ -170,7 +170,7 @@ char* ICACHE_FLASH_ATTR humidityToString( void )
   if(temphum_valid!=0) goto end;
   if(sht3x_available==0)
    {
-     os_sprintf(humidity, "%d.%d", (sht3x.humidity/100), abs(sht3x.humidity%100));
+     os_sprintf(humidity, "%d.%02d", (sht3x.humidity/100), abs(sht3x.humidity%100));
    } else {
     if(sht1x_available==0)
      {
