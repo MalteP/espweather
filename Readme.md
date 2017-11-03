@@ -60,7 +60,7 @@ If you don't want to modify the firmware, you might skip the next steps and [fla
 
 #### Installing the toolchain
 
-First we will install all necessary packages to compile the toolchain. On a minimal Fedora 23 Linux use the following commands:
+First we will install all necessary packages to compile the toolchain. On a minimal Fedora 26 Linux use the following commands:
 
 ```
 sudo dnf install make autoconf automake libtool gcc gcc-c++ gperf flex bison texinfo gawk ncurses-devel expat-devel python pyserial python-devel sed git unzip wget bzip2 patch help2man
@@ -69,6 +69,8 @@ sudo dnf install http://download1.rpmfusion.org/free/fedora/rpmfusion-free-relea
 sudo dnf install http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 sudo dnf install unrar
 ```
+
+If you are using Debian or Ubuntu Linux, [just have a look at the toolchain documentation for installing the needed packages](https://github.com/pfalcon/esp-open-sdk#requirements-and-dependencies). After that you may continue as described below.
 
 Now we're ready to download and compile the ESP8266 toolchain. This process may take a few minutes, depending on your Internet connection and CPU speed, so you better get yourself a cup of tea (or coffee).
 
@@ -106,6 +108,8 @@ yui-compressor is written in Java, so we'll need to install the Java package:
 ```
 sudo dnf install java
 ```
+
+If you are using Debian or Ubuntu Linux instead of Fedora, [install the OpenJDK JRE.](https://wiki.ubuntuusers.de/Java/Installation/OpenJDK/)
 
 Now download the precompiled .jar file to a folder and also copy it to /opt:
 
@@ -162,6 +166,16 @@ If the serial port is not /dev/ttyUSB0, you may add (for example) `ESPPORT=/dev/
 
 If the firmware is running, the orange LED on the board should start flashing.
 
+#### Troubleshooting
+
+If the blue LED is constantly flickering, there might be a problem with the calibration data which is stored in flash memory. The position depends on the size of flash determined from the firmware header. Just flash the default calibration data again:
+
+```
+make defaultflash
+```
+
+After cycling power of the board, the firmware should run fine. The precompiled binary includes calibration data at the correct position.
+
 ## Flashing the precompiled firmware
 
 If you don't want to compile the firmware yourself, just skip all "[Building the firmware](#building-the-firmware)" steps above.
@@ -215,14 +229,15 @@ On the sensor settings tab, you may change the interval the sensor data is pushe
 
 As cloud services [Thinkspeak](http://www.thingspeak.com/) and [adafruit.io](http://io.adafruit.com/) are available. It is also possible to use a custom URL with placeholders which are replaced by measured values.
 
-| Placeholder | Value              |
-| ----------- | ------------------ |
-| %t          | Temperature        |
-| %h          | rel. Humidity      |
-| %p          | Barometic pressure |
-| %v          | Battery voltage    |
+| Placeholder | Value                |
+| ----------- | -------------------- |
+| %t          | Temperature          |
+| %h          | rel. Humidity        |
+| %p          | Barometic pressure   |
+| %v          | Battery voltage      |
+| %r          | WiFi signal strength |
 
-If you like to use MQTT, just setup a server software like [mosquitto](http://www.mosquitto.org/) and configure host, port, user and password. The sensor will publish data on [topic]/temperature, /humidity, /pressure and /voltage. Different clients may subscribe and receive data immediately after it is published.
+If you like to use MQTT, just setup a server software like [mosquitto](http://www.mosquitto.org/) and configure host, port, user and password. The sensor will publish data on [topic]/temperature, /humidity, /pressure, /voltage and /rssi. Different clients may subscribe and receive data immediately after it is published.
 
 ##### User settings
 
