@@ -23,7 +23,7 @@ function refresh_weather()
    })
    .error(function(status, responseText, xhr) {
     error_ui("Could not load sensor data!", xhr);
-    set_values("", "", "", "");
+    set_values("", "", "", "", "");
    });
  }
 
