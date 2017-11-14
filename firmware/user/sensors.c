@@ -72,7 +72,7 @@ void ICACHE_FLASH_ATTR sensorsInit( void )
   battery[0]='\0';
   // Because GPIO2 (DHT22 pin) is alternative UART TX in bootloader mode, the sensor seems
   // to get a little bit confused and needs some delay before first read after boot...
-  if(sht1x_available!=0)
+  if(sht3x_available!=0&&sht1x_available!=0)
    {
     in_progress = 1;
     os_timer_disarm(&sensorsTimer);
