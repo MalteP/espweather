@@ -31,5 +31,6 @@
  char* pressureToString( void );
  char* batteryVoltageToString( void );
  char* rssiToString( void );
+ int ICACHE_FLASH_ATTR sensors_sprintf( char *buf, int value, int dec_pow );
 
 #endif

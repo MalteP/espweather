@@ -149,13 +149,13 @@ char* ICACHE_FLASH_ATTR temperatureToString( void )
   if(temphum_valid!=0) goto end;
   if(sht3x_available==0)
    {
-    os_sprintf(temperature, "%d.%02d", (sht3x.temperature/100), abs(sht3x.temperature%100));
+    sensors_sprintf(temperature, sht3x.temperature, 2);
    } else {
     if(sht1x_available==0)
      {
-      os_sprintf(temperature, "%d.%d", (sht1x.temperature/10), abs(sht1x.temperature%10));
+      sensors_sprintf(temperature, sht1x.temperature, 1);
      } else {
-      os_sprintf(temperature, "%d.%d", (dht22.temperature/10), abs(dht22.temperature%10));
+      sensors_sprintf(temperature, dht22.temperature, 1);
      }
    }
   end:
@@ -170,13 +170,13 @@ char* ICACHE_FLASH_ATTR humidityToString( void )
   if(temphum_valid!=0) goto end;
   if(sht3x_available==0)
    {
-     os_sprintf(humidity, "%d.%02d", (sht3x.humidity/100), abs(sht3x.humidity%100));
+     sensors_sprintf(humidity, sht3x.humidity, 2);
    } else {
     if(sht1x_available==0)
      {
-      os_sprintf(humidity, "%d.%d", (sht1x.humidity/10), abs(sht1x.humidity%10));
+      sensors_sprintf(humidity, sht1x.humidity, 1);
      } else {
-      os_sprintf(humidity, "%d.%d", (dht22.humidity/10), abs(dht22.humidity%10));
+      sensors_sprintf(humidity, dht22.humidity, 1);
      }
    }
   end:
@@ -191,11 +191,11 @@ char* ICACHE_FLASH_ATTR pressureToString( void )
   if(pressure_valid!=0) goto end;
   if(ms5637_available==0)
    {
-    os_sprintf(pressure, "%ld.%02d", (ms5637.p/100), abs(ms5637.p%100));
+    sensors_sprintf(pressure, ms5637.p, 2);
    } else {
     if(bmp180_available==0)
      {
-      os_sprintf(pressure, "%ld.%02d", (bmp180.p/100), abs(bmp180.p%100));
+      sensors_sprintf(pressure, bmp180.p, 2);
      }
    }
   end:
@@ -208,7 +208,7 @@ char* ICACHE_FLASH_ATTR batteryVoltageToString( void )
  {
   int battery_voltage = batteryGetVoltage();
   battery[0]='\0';
-  os_sprintf(battery, "%d.%03d", (battery_voltage/1000), abs(battery_voltage%1000));
+  sensors_sprintf(battery, battery_voltage, 3);
   return battery;
  }
 
@@ -219,7 +219,20 @@ char* ICACHE_FLASH_ATTR rssiToString( void )
   rssi[0]='\0';
   if(rssi_value!=31) // 31 = Failure
    {
-    os_sprintf(rssi, "%d", rssi_value);
+    sensors_sprintf(rssi, rssi_value, 0);
    }
   return rssi;
+ }
+
+int ICACHE_FLASH_ATTR sensors_sprintf( char *buf, int value, int dec_pow )
+ {
+  char *sign = (value<0?"-":"");
+  switch(dec_pow)
+   {
+    case 0: return os_sprintf(buf, "%d", value);
+    case 1: return os_sprintf(buf, "%s%d.%d", sign, abs(value/10), abs(value%10));
+    case 2: return os_sprintf(buf, "%s%d.%02d", sign, abs(value/100), abs(value%100));
+    case 3: return os_sprintf(buf, "%s%d.%03d", sign, abs(value/1000), abs(value%1000));
+   }
+  return -1;
  }
