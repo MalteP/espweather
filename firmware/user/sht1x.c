@@ -32,7 +32,7 @@ int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
   uint8_t crc_calc;
 
   // Disable GPIO interrupts
-  ETS_GPIO_INTR_DISABLE();
+  ETS_INTR_LOCK();
 
   // Set pin function to GPIO
   PIN_FUNC_SELECT(SHT_DATA_MUX, SHT_DATA_FUNC);
@@ -47,7 +47,7 @@ int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
   GPIO_REG_WRITE(GPIO_ENABLE_ADDRESS, GPIO_REG_READ(GPIO_ENABLE_ADDRESS) | (1 << SHT_CLK_PIN));
 
   // Enable GPIO interrupts again
-  ETS_GPIO_INTR_ENABLE();
+  ETS_INTR_UNLOCK();
 
   // Set ports
   SHT_DATA_HIGH();

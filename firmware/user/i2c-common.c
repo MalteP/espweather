@@ -27,7 +27,7 @@
 void i2cInit( void )
  {
   // Disable GPIO interrupts
-  ETS_GPIO_INTR_DISABLE();
+  ETS_INTR_LOCK();
 
   // Set pin function to GPIO
   PIN_FUNC_SELECT(I2C_SDA_MUX, I2C_SDA_FUNC);
@@ -42,7 +42,7 @@ void i2cInit( void )
   GPIO_REG_WRITE(GPIO_ENABLE_ADDRESS, GPIO_REG_READ(GPIO_ENABLE_ADDRESS) | (1 << I2C_SCL_PIN));
 
   // Enable GPIO interrupts again
-  ETS_GPIO_INTR_ENABLE();
+  ETS_INTR_UNLOCK();
 
   // Set ports
   I2C_SDA_HIGH();

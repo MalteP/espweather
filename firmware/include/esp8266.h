@@ -14,5 +14,4 @@
 #include <osapi.h>
 #include <user_interface.h>
 
-#include "espmissingincludes.h"
 #include "uart_hw.h"
