@@ -3,7 +3,6 @@
   { "id": "0", "name": "Disabled", "key_label": "", "grp_label": "", "url_visible": false },
   { "id": "1", "name": "Thingspeak", "key_label": "HTTP API key", "grp_label": "", "url_visible": false },
   { "id": "2", "name": "Adafruit IO", "key_label": "HTTP AIO key", "grp_label": "HTTP group", "url_visible": false },
-  { "id": "3", "name": "Sparkfun", "key_label": "HTTP public key", "grp_label": "HTTP private key", "url_visible": false },
   { "id": "255", "name": "Custom URL", "key_label": "", "grp_label": "", "url_visible": true }
  ],
  "mqtt_services": [

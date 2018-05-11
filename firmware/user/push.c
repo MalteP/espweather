@@ -180,20 +180,15 @@ uint8_t ICACHE_FLASH_ATTR httpPush( void )
      {
       // adafruit.io
       os_sprintf(buff, HTTP_ADAFRUIT, configGet()->http_grp, configGet()->http_key, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString(), rssiToString());
-     } else
-      if(mode==3)
-       {
-        // data.sparkfun.com
-        os_sprintf(buff, HTTP_SPARKFUN, configGet()->http_key, configGet()->http_grp, temperatureToString(), humidityToString(), pressureToString(), batteryVoltageToString(), rssiToString());
-       } else {
-        // Custom URL
-        os_strcpy(buff, configGet()->http_url);
-        strreplace(buff, "%t", temperatureToString(), sizeof(buff));
-        strreplace(buff, "%h", humidityToString(), sizeof(buff));
-        strreplace(buff, "%p", pressureToString(), sizeof(buff));
-        strreplace(buff, "%v", batteryVoltageToString(), sizeof(buff));
-        strreplace(buff, "%r", rssiToString(), sizeof(buff));
-       }
+     } else {
+      // Custom URL
+      os_strcpy(buff, configGet()->http_url);
+      strreplace(buff, "%t", temperatureToString(), sizeof(buff));
+      strreplace(buff, "%h", humidityToString(), sizeof(buff));
+      strreplace(buff, "%p", pressureToString(), sizeof(buff));
+      strreplace(buff, "%v", batteryVoltageToString(), sizeof(buff));
+      strreplace(buff, "%r", rssiToString(), sizeof(buff));
+     }
   if(!http_get(buff, "", httpPushCb)) return 1;
   //os_printf("Push: URL=%s\n", buff);
   return 0;
