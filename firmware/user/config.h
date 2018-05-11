@@ -66,6 +66,9 @@
  #define MQTT_PASS   ""
  #define MQTT_TOPIC  "sensors/0"
 
+ // Config STA password (Unencrypted if not defined)
+ //#define WIFI_PASS   "ESP_Weather"
+
  // Default data IP configuration
  #define WIFI_DHCP   1
  #define WIFI_IP     "192.168.0.99"
@@ -116,6 +119,7 @@
  void configSetWifiMode( int mode );
  void configRestart( void );
  void configInitIP( void );
+ void configInitSoftAP( void );
  void statusLed( uint8_t mode );
 
 #endif

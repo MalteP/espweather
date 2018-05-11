@@ -201,6 +201,22 @@ void ICACHE_FLASH_ATTR configInitIP( void )
  }
 
 
+// SoftAP configuration
+void ICACHE_FLASH_ATTR configInitSoftAP( void )
+ {
+  struct softap_config config;
+  wifi_softap_get_config_default(&config);
+  os_memset(config.password, 0, sizeof(config.password));
+  #ifndef WIFI_PASS
+  config.authmode = AUTH_OPEN;
+  #else
+  os_strncpy((char*)config.password, WIFI_PASS, sizeof(config.password)-1);
+  config.authmode = AUTH_WPA_WPA2_PSK;
+  #endif
+  wifi_softap_set_config_current(&config);
+ }
+
+
 // Calculate config checksum
 char ICACHE_FLASH_ATTR calcChksum( void )
  {

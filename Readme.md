@@ -214,6 +214,8 @@ To leave configuration mode, hold the button for 3-4sec. To erase all configurat
 
 Click on the button "Settings" at the top right side. The default username is "admin" with password "insecure".
 
+Hint: If you'd like to use an encrypted configuration WiFi, just uncomment the WIFI_PASS definition in user/config.h before compiling.
+
 ##### Network settings
 
 ![Screenshot: Webinterface - Network settings](pictures/webinterface-network-settings.png)
