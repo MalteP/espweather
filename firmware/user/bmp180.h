@@ -39,6 +39,8 @@
  #define BMP180_CTRL     0xF4
  #define BMP180_SRESET   0xE0
  #define BMP180_SRESET_V 0xB6
+ #define BMP180_CHIPID   0xD0
+ #define BMP180_CHIPID_V 0x55
  #define BMP180_TEMP     0x2E
  #define BMP180_OUT_MSB  0xF6
  #define BMP180_OUT_LSB  0xF7

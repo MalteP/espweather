@@ -88,6 +88,29 @@ int ICACHE_FLASH_ATTR i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t v
  }
 
 
+// Read 8bit register via i2c
+int8_t ICACHE_FLASH_ATTR i2cReadRegister8( uint8_t device, uint8_t value )
+ {
+  int8_t data;
+  if(i2cWriteCmd(device, value, I2C_NO_STOP)!=0)
+   {
+    return -1;
+   }
+  // Repeated start
+  i2cSendStart();
+  // Sensor read address
+  if(i2cWriteByte((device<<1)|1))
+   {
+    i2cSendStop();
+    return -1;
+   }
+  // Read and return data
+  data = i2cReadByte(0);
+  i2cSendStop();
+  return data;
+ }
+
+
 // Read 16bit register via i2c
 int16_t ICACHE_FLASH_ATTR i2cReadRegister16( uint8_t device, uint8_t value )
  {
@@ -110,6 +133,14 @@ int16_t ICACHE_FLASH_ATTR i2cReadRegister16( uint8_t device, uint8_t value )
   data |= i2cReadByte(0);
   i2cSendStop();
   return data;
+ }
+
+
+// Read 16bit register via i2c (Little endian)
+int16_t ICACHE_FLASH_ATTR i2cReadRegister16LE( uint8_t device, uint8_t value )
+ {
+  int16_t data = i2cReadRegister16(device, value);
+  return (data >> 8) | (data << 8);
  }
 
 

@@ -30,6 +30,7 @@ int ICACHE_FLASH_ATTR bmpInit( struct bmpdata* d )
  {
   i2cInit();
   if(i2cWriteRegister8(BMP180_ADDR, BMP180_SRESET, BMP180_SRESET_V)!=0) return -1;
+  if(i2cReadRegister8(BMP180_ADDR, BMP180_CHIPID)!=BMP180_CHIPID_V) return -1;
   // Read calibration data
   d->ac1 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC1);
   d->ac2 = i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC2);

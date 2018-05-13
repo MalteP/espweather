@@ -51,7 +51,9 @@
  void i2cInit( void );
  int i2cWriteCmd( uint8_t device, uint8_t value, uint8_t sendstop );
  int i2cWriteRegister8( uint8_t device, uint8_t addr, uint8_t value );
+ int8_t i2cReadRegister8( uint8_t device, uint8_t value );
  int16_t i2cReadRegister16( uint8_t device, uint8_t value );
+ int16_t i2cReadRegister16LE( uint8_t device, uint8_t value );
  int32_t i2cReadRegister24( uint8_t device, uint8_t value );
 
  // Low level functions
