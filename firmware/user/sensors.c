@@ -191,11 +191,11 @@ char* ICACHE_FLASH_ATTR pressureToString( void )
   if(pressure_valid!=0) goto end;
   if(ms5637_available==0)
    {
-    sensors_sprintf(pressure, ms5637.p, 2);
+    sensors_sprintf(pressure, ms5637.pressure, 2);
    } else {
     if(bmp180_available==0)
      {
-      sensors_sprintf(pressure, bmp180.p, 2);
+      sensors_sprintf(pressure, bmp180.pressure, 2);
      }
    }
   end:

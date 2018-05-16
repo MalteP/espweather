@@ -32,16 +32,16 @@ int ICACHE_FLASH_ATTR msInit( struct msdata* d )
   if(i2cWriteCmd(MS5637_ADDR, MS5637_RESET, I2C_SEND_STOP)!=0) return -1; // Reset sensor
   // Read calibration data
   #ifdef MS5637_ENABLE_CRC_CHECK
-  d->c[0] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x00);
+  d->c[0] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x00);
   #else
   d->c[0] = 0;
   #endif
-  d->c[1] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x02);
-  d->c[2] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x04);
-  d->c[3] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x06);
-  d->c[4] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x08);
-  d->c[5] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0A);
-  d->c[6] = (uint16_t) i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0C);
+  d->c[1] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x02);
+  d->c[2] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x04);
+  d->c[3] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x06);
+  d->c[4] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x08);
+  d->c[5] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0A);
+  d->c[6] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x0C);
   d->c[7] = 0;
   #ifdef MS5637_ENABLE_CRC_CHECK
   if(msCheckCRC(&d->c[0])!=((d->c[0]>>12)&0x000F))
@@ -67,46 +67,46 @@ int ICACHE_FLASH_ATTR msReadSensor( struct msdata* d )
   if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D1|MS5637_OSR_PRES, I2C_SEND_STOP)!=0) return -1;
   os_delay_us(540);
   os_delay_us(540<<MS5637_OS_PRES);
-  d->d1 = (uint32_t) i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
+  d->d1 = i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
   // Read D2: digital temperature value
   if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D2|MS5637_OSR_TEMP, I2C_SEND_STOP)!=0) return -1;
   os_delay_us(540);
   os_delay_us(540<<MS5637_OS_TEMP);
-  d->d2 = (uint32_t) i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
+  d->d2 = i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
   //os_printf("MS5637 read: D1=%u, D2=%u\n", d->d1, d->d2);
   // Calculate temperature
   dt = d->d2 - (int32_t) d->c[5] * (1L<<8);
-  d->t = 2000 + (int64_t) dt * (int64_t) d->c[6] / (1LL<<23);
+  d->temperature = 2000 + (int64_t) dt * (int64_t) d->c[6] / (1LL<<23);
   #ifdef MS5637_ENABLE_COMPENSATION
-  if(d->t<2000)
+  if(d->temperature<2000)
    {
     t2 = 3 * ((int64_t) dt * (int64_t) dt) / (1LL<<33); // Low temperature
    } else {
     t2 = 5 * ((int64_t) dt * (int64_t) dt) / (1LL<<38); // High temperature
    }
-  d->t -= t2;
+  d->temperature -= t2;
   #endif
   // Calculate pressure
   off = (int64_t) d->c[2] * (1LL<<17) + (int64_t) dt * (int64_t) d->c[4] / (1LL<<6);
   sens = (int64_t) d->c[1] * (1LL<<16) + (int64_t) dt * (int64_t) d->c[3] / (1LL<<7);
   #ifdef MS5637_ENABLE_COMPENSATION
-  if(d->t<2000)
+  if(d->temperature<2000)
    {
     // Low temperature
-    off2 = 61 * (int64_t) (d->t-2000) * (int64_t) (d->t-2000) / (1LL<<4);
-    sens2 = 29 * (int64_t) (d->t-2000) * (int64_t) (d->t-2000) / (1LL<<4);
-    if(d->t<-1500)
+    off2 = 61 * (int64_t) (d->temperature-2000) * (int64_t) (d->temperature-2000) / (1LL<<4);
+    sens2 = 29 * (int64_t) (d->temperature-2000) * (int64_t) (d->temperature-2000) / (1LL<<4);
+    if(d->temperature<-1500)
      {
       // Very low temperature
-      off2 += 17 * (int64_t) (d->t+1500) * (int64_t) (d->t+1500);
-      sens2 += 9 * (int64_t) (d->t+1500) * (int64_t) (d->t+1500);
+      off2 += 17 * (int64_t) (d->temperature+1500) * (int64_t) (d->temperature+1500);
+      sens2 += 9 * (int64_t) (d->temperature+1500) * (int64_t) (d->temperature+1500);
      }
     off -= off2;
     sens -= sens2;
    }
   #endif
-  d->p = ((uint64_t) d->d1 * sens / (1LL<<21) - off) / (1LL << 15);
-  os_printf("MS5637: t=%d, p=%d\n", d->t, d->p);
+  d->pressure = ((uint64_t) d->d1 * sens / (1LL<<21) - off) / (1LL << 15);
+  os_printf("MS5637: t=%d, p=%d\n", d->temperature, d->pressure);
   return 0;
  }
 

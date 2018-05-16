@@ -64,8 +64,8 @@
    int16_t md;
    int32_t ut;
    int32_t up;
-   int32_t t;
-   int32_t p;
+   int32_t temperature;
+   int32_t pressure;
   };
 
  // Functions

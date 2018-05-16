@@ -56,8 +56,8 @@
    uint16_t c[8];
    uint32_t d1;
    uint32_t d2;
-   int32_t t;
-   int32_t p;
+   int32_t temperature;
+   int32_t pressure;
   };
 
  // Functions
