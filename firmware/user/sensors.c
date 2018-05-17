@@ -113,11 +113,11 @@ void ICACHE_FLASH_ATTR sensorsRead( void )
    }
   if(ms5637_available==0)
    {
-    pressure_valid = msReadSensor(&ms5637);
+    pressure_valid = msRead(&ms5637);
    } else {
     if(bmp180_available==0)
      {
-      pressure_valid = bmpReadSensor(&bmp180);
+      pressure_valid = bmpRead(&bmp180);
      }
    }
   in_progress = 0;

@@ -70,6 +70,6 @@
 
  // Functions
  int bmpInit( struct bmpdata* d );
- int bmpReadSensor( struct bmpdata* d );
+ int bmpRead( struct bmpdata* d );
 
 #endif

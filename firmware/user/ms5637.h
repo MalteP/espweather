@@ -62,7 +62,7 @@
 
  // Functions
  int msInit( struct msdata* d );
- int msReadSensor( struct msdata* d );
+ int msRead( struct msdata* d );
  #ifdef MS5637_ENABLE_CRC_CHECK
  uint16_t msCheckCRC( uint16_t prom[] );
  #endif

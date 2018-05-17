@@ -49,7 +49,7 @@ int ICACHE_FLASH_ATTR bmpInit( struct bmpdata* d )
 
 
 // Read sensor data and calculate values
-int ICACHE_FLASH_ATTR bmpReadSensor( struct bmpdata* d )
+int ICACHE_FLASH_ATTR bmpRead( struct bmpdata* d )
  {
   int32_t x1, x2, x3, b3, b5, b6;
   uint32_t b4, b7;

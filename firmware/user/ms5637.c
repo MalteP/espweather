@@ -56,7 +56,7 @@ int ICACHE_FLASH_ATTR msInit( struct msdata* d )
 
 
 // Read sensor data and calculate values
-int ICACHE_FLASH_ATTR msReadSensor( struct msdata* d )
+int ICACHE_FLASH_ATTR msRead( struct msdata* d )
  {
   int32_t dt;
   int64_t off, sens;
