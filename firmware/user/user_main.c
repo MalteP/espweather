@@ -77,8 +77,7 @@ void ICACHE_FLASH_ATTR user_init(void)
   configInit();
   configLoad();
 
-  // Set SoftAP settings and check for correct mode
-  configInitSoftAP();
+  // Check if wifi mode is correct
   configCheckWifiMode();
 
   // Measure battery voltage
@@ -104,7 +103,8 @@ void ICACHE_FLASH_ATTR user_init(void)
 // Initialize wifi, sensors and push data
 void ICACHE_FLASH_ATTR init_done(void)
  {
-  // Init wifi IP configuration
+  // Init SoftAP and IP configuration
+  configInitSoftAP();
   configInitIP();
 
   // Init sensors
