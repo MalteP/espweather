@@ -76,9 +76,16 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
        break;
       }
      statusLed(LED_FLASH1);
-     // Sensor data available?
-     if(sensorsDone()==0)
+     pushRetries = 0;
+     ++pushState;
+     break;
+    case PUSH_READ:
+     if(sensorsRead(pushRetries)<0)
       {
+       // At least one sensor value failed, retry five times then continue anyway.
+       if(++pushRetries>=5) ++pushState;
+      } else {
+       // Reading done
        ++pushState;
       }
      break;
@@ -160,7 +167,6 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
     pushTimer();
    }
  }
-
 
 
 // Push via HTTP

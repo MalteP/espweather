@@ -23,16 +23,34 @@
 #include <esp8266.h>
 #include "dht22.h"
 
+int dht22delay = 0;
+
+void dht22TimerCb( void *arg );
+
 
 // Init sensor
 int ICACHE_FLASH_ATTR dht22Init( struct dhtdata* d )
  {
+  static ETSTimer dht22Timer;
   // GPIO2: DHT22 data
   PIN_FUNC_SELECT(DHT22_MUX, DHT22_FUNC);
   GPIO_DIS_OUTPUT(DHT22_GPIO);
   d->humidity = 0;
   d->temperature = 0;
+  // Because GPIO2 (DHT22 pin) is alternative UART TX in bootloader mode, the sensor seems
+  // to get a little bit confused and needs some delay before first read after boot...
+  dht22delay = 1;
+  os_timer_disarm(&dht22Timer);
+  os_timer_setfn(&dht22Timer, dht22TimerCb, NULL);
+  os_timer_arm(&dht22Timer, DHT22_READ_DELAY_MS, 0);
   return 0;
+ }
+
+
+// First read a few hundred milliseconds delayed
+void ICACHE_FLASH_ATTR dht22TimerCb( void *arg )
+ {
+  dht22delay = 0;
  }
 
 
@@ -42,6 +60,9 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
   unsigned int i;
   unsigned int bitctr = 0;
   uint8_t chksum = 0;
+
+  // Initial read delay
+  if(dht22delay>0) return -1;
 
   // Reset data
   for(i=0; i<5; i++)
@@ -120,7 +141,7 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
    }
 
   d->humidity = ((uint16_t)d->rawdata[0]<<8) + d->rawdata[1];
-  d->temperature = ((uint16_t)d->rawdata[2]<<8) + d->rawdata[3];
+  d->temperature = (int16_t)(((uint16_t)d->rawdata[2]<<8) + d->rawdata[3]);
   os_printf("DHT22: t=%d, h=%d\n", d->temperature, d->humidity);
 
   goto endfunction;

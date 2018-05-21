@@ -31,7 +31,7 @@
  #define PUSH_RETRIES_MAX         5
  #define PUSH_REDIRECT_MAX        5
 
- enum push_states { PUSH_IDLE, PUSH_INIT, PUSH_IPWAIT, PUSH_HTTPSTART, PUSH_HTTP, PUSH_HTTPWAIT, PUSH_MQTTSTART, PUSH_MQTT, PUSH_MQTTWAIT, PUSH_FINISH };
+ enum push_states { PUSH_IDLE, PUSH_INIT, PUSH_READ, PUSH_IPWAIT, PUSH_HTTPSTART, PUSH_HTTP, PUSH_HTTPWAIT, PUSH_MQTTSTART, PUSH_MQTT, PUSH_MQTTWAIT, PUSH_FINISH };
 
  #define HTTP_THINGSPEAK "http://api.thingspeak.com/update?api_key=%s&field1=%s&field2=%s&field3=%s&field4=%s&field5=%s"
  #define HTTP_ADAFRUIT   "http://io.adafruit.com/api/groups/%s/send.json?x-aio-key=%s&temperature=%s&humidity=%s&pressure=%s&voltage=%s&rssi=%s"

@@ -94,8 +94,8 @@
  // Structure for sensor data
  struct shtdata
   {
-   int16_t temperature;
-   int16_t humidity;
+   int32_t temperature;
+   uint32_t humidity;
   };
 
  int shtInit( struct shtdata* d );

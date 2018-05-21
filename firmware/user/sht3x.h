@@ -47,8 +47,8 @@
  // Structure for sensor data
  struct sht3data
   {
-   int temperature;
-   int humidity;
+   int32_t temperature;
+   uint32_t humidity;
   };
 
  int sht3Init( struct sht3data* d );

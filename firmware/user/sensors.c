@@ -25,8 +25,9 @@
 #include "dht22.h"
 #include "sht1x.h"
 #include "sht3x.h"
-#include "bmp180.h"
 #include "ms5637.h"
+#include "bmp180.h"
+#include "bmx280.h"
 #include "battery.h"
 
 struct shtdata sht1x;
@@ -34,99 +35,131 @@ struct sht3data sht3x;
 struct dhtdata dht22;
 struct msdata ms5637;
 struct bmpdata bmp180;
+struct bmx280data bmx280;
 
-int sht1x_available = -1;
-int sht3x_available = -1;
-int ms5637_available = -1;
-int bmp180_available = -1;
+// List of all known sensors and their values
+// It is impossible to detect the presence of DHT22 during initialization, so it will always be reported as found. 
+// If you want to use temperature values of the pressure sensors, please comment out the DHT22 line.
+struct sensorlist sensors[][10] =
+ {
+  { "SHT3x",  (void*)&sht3Init,   (void*)&sht3Read,   &sht3x,  -1, NULL, &(sht3x.temperature),  2, NULL,                &(sht3x.humidity),  2, NULL, NULL              , 0 },
+  { "BMx280", (void*)&bmx280Init, (void*)&bmx280Read, &bmx280, -1, NULL, &(bmx280.temperature), 2, &bmx280.sensor_type, &(bmx280.humidity), 3, NULL, &(bmx280.pressure), 2 },
+  { "SHT1x",  (void*)&shtInit,    (void*)&shtRead,    &sht1x,  -1, NULL, &(sht1x.temperature),  1, NULL,                &(sht1x.humidity),  1, NULL, NULL              , 0 },
+  { "DHT22",  (void*)&dht22Init,  (void*)&dht22Read,  &dht22,  -1, NULL, &(dht22.temperature),  1, NULL,                &(dht22.humidity),  1, NULL, NULL              , 0 },
+  { "MS5637", (void*)&msInit,     (void*)&msRead,     &ms5637, -1, NULL, &(ms5637.temperature), 2, NULL,                NULL,               0, NULL, &(ms5637.pressure), 2 },
+  { "BMP180", (void*)&bmpInit,    (void*)&bmpRead,    &bmp180, -1, NULL, &(bmp180.temperature), 1, NULL,                NULL,               0, NULL, &(bmp180.pressure), 2 }
+ };
 
-int temphum_valid = -1;
-int pressure_valid = -1;
-
+// Do not read all sensors everytime sensorsRead() called. See timer below.
 int read_limit = 0;
-int in_progress = 0;
-
-char temperature[8];
-char humidity[8];
-char pressure[8];
-char battery[8];
-char rssi[8];
-
-void sensorsReadCb( void *arg );
 void readLimitCb( void *arg );
 
 
 // Initialize sensors
 void ICACHE_FLASH_ATTR sensorsInit( void )
  {
-  static ETSTimer sensorsTimer;
-  sht3x_available = sht3Init(&sht3x);
-  sht1x_available = shtInit(&sht1x);
-  dht22Init(&dht22);
-  ms5637_available = msInit(&ms5637);
-  bmp180_available = bmpInit(&bmp180);
-  os_printf("Sensors: SHT3x=%c, SHT1x=%c, DHT=?, MS=%c, BMP=%c\n", (sht3x_available==0?'y':'n'), (sht1x_available==0?'y':'n'), (ms5637_available==0?'y':'n'), (bmp180_available==0?'y':'n'));
-  temperature[0]='\0';
-  humidity[0]='\0';
-  pressure[0]='\0';
-  battery[0]='\0';
-  // Because GPIO2 (DHT22 pin) is alternative UART TX in bootloader mode, the sensor seems
-  // to get a little bit confused and needs some delay before first read after boot...
-  if(sht3x_available!=0&&sht1x_available!=0)
+  int i;
+  // Call init function for all known sensor types
+  for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    in_progress = 1;
-    os_timer_disarm(&sensorsTimer);
-    os_timer_setfn(&sensorsTimer, sensorsReadCb, NULL);
-    os_timer_arm(&sensorsTimer, 500, 0);
-   } else {
-    sensorsRead();
+    sensors[i]->sensor_status = (*(sensors[i]->func_init))(sensors[i]->sensor_struct);
+    os_printf("Sensors: Init %s? %s\n", sensors[i]->name, (sensors[i]->sensor_status<0?"no":"yes"));
    }
- }
-
-
-// First read a few hundred milliseconds delayed
-void ICACHE_FLASH_ATTR sensorsReadCb( void *arg )
- {
-  sensorsRead();
  }
 
 
 // Read available sensors
-void ICACHE_FLASH_ATTR sensorsRead( void )
+int ICACHE_FLASH_ATTR sensorsRead( int retry )
  {
   static ETSTimer limitTimer;
-  if(read_limit!=0) return;
-  read_limit = 1;
-  in_progress = 1;
-  temphum_valid = -1;
-  pressure_valid = -1;
-  if(sht3x_available==0)
+  int i, v;
+  int status;
+  int rtn = 0;
+  // Limit does not apply for reading failed sensors again
+  if(retry==0)
    {
-    temphum_valid = sht3Read(&sht3x);
-   } else {
-    if(sht1x_available==0)
+    if(read_limit!=0) return 1;
+    read_limit = 1;
+   }
+  // Reset status on first try / reset status for failed sensors
+  // (where status -1=no sensor, 0=found, 1=read failed, 2=read ok)
+  for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
+   {
+    if(retry==0)
      {
-      temphum_valid = shtRead(&sht1x);
+      if(sensors[i]->sensor_status>0) sensors[i]->sensor_status = 0;
      } else {
-      temphum_valid = dht22Read(&dht22);
+      if(sensors[i]->sensor_status==1) sensors[i]->sensor_status = 0;
      }
    }
-  if(ms5637_available==0)
+   // Find and read sensors for all known values
+   for(v=0; v<3; v++)
+    {
+     for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
+      {
+       // Check if current sensor was found and can deliver needed value
+       if(sensorUseable(sensors[i], v)!=0) continue;
+       // Check if sensor needs to be read
+       if(sensors[i]->sensor_status==0)
+        {
+         status = (*(sensors[i]->func_read))(sensors[i]->sensor_struct);
+         os_printf("Sensors: Read %s %s\n", sensors[i]->name, (status<0?"failed":"ok"));
+         // Status from function -1 on error 0 if ok -> 1 on error, 2 if ok
+         sensors[i]->sensor_status = status + 2;
+         // Sensor read failed, change return code
+         if(status!=0)
+          {
+           rtn = -1;
+          }
+        }
+       // Done, start with next value
+       break;
+      }
+    }
+  if(retry==0)
    {
-    pressure_valid = msRead(&ms5637);
-   } else {
-    if(bmp180_available==0)
-     {
-      pressure_valid = bmpRead(&bmp180);
-     }
+    // Reading is only allowed every 5 sec.
+    os_timer_disarm(&limitTimer);
+    os_timer_setfn(&limitTimer, readLimitCb, NULL);
+    os_timer_arm(&limitTimer, 5000, 0);
    }
-  in_progress = 0;
-  // Reading the sensor is only allowed every 5 sec.
-  os_timer_disarm(&limitTimer);
-  os_timer_setfn(&limitTimer, readLimitCb, NULL);
-  os_timer_arm(&limitTimer, 5000, 0);
+  return rtn;
  }
 
+
+// Check sensor from list if found and suitable
+int ICACHE_FLASH_ATTR sensorUseable( struct sensorlist *sensor, int v )
+ {
+  // Skip if not detected
+  if(sensor->sensor_status<0) return -1;
+  // Check if sensor provides value
+  switch(v)
+   {
+    case 0: // Temperature
+     if(sensor->val_temperature==NULL) return -1;
+     if(sensor->has_temperature!=NULL)
+      {
+       if(*(sensor->has_temperature)==0) return -1;
+      }
+     break;
+    case 1: // Humidity
+     if(sensor->val_humidity==NULL) return -1;
+     if(sensor->has_humidity!=NULL)
+      {
+       if(*(sensor->has_humidity)==0) return -1;
+      }
+     break;
+    case 2: // Pressure
+     if(sensor->val_pressure==NULL) return -1;
+     if(sensor->has_pressure!=NULL)
+      {
+       if(*(sensor->has_pressure)==0) return -1;
+      }
+     break;
+   }
+  return 0;
+ }
+ 
 
 // Reset flag
 void ICACHE_FLASH_ATTR readLimitCb( void *arg )
@@ -135,30 +168,20 @@ void ICACHE_FLASH_ATTR readLimitCb( void *arg )
  }
 
 
-// Wait for sensors?
-int sensorsDone( void )
- {
-  return in_progress;
- }
-
-
 // Convert temperature value to string
 char* ICACHE_FLASH_ATTR temperatureToString( void )
  {
+  int i;
+  static char temperature[8];
   temperature[0]='\0';
-  if(temphum_valid!=0) goto end;
-  if(sht3x_available==0)
+  for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    sensors_sprintf(temperature, sht3x.temperature, 2);
-   } else {
-    if(sht1x_available==0)
+    if(sensorUseable(sensors[i], 0)==0&&sensors[i]->sensor_status==2)
      {
-      sensors_sprintf(temperature, sht1x.temperature, 1);
-     } else {
-      sensors_sprintf(temperature, dht22.temperature, 1);
+      sensors_sprintf(temperature, *(sensors[i]->val_temperature), sensors[i]->dpow_temperature);
+      break;
      }
    }
-  end:
   return temperature;
  }
 
@@ -166,20 +189,17 @@ char* ICACHE_FLASH_ATTR temperatureToString( void )
 // Convert humidity value to string
 char* ICACHE_FLASH_ATTR humidityToString( void )
  {
+  int i;
+  static char humidity[8];
   humidity[0]='\0';
-  if(temphum_valid!=0) goto end;
-  if(sht3x_available==0)
+  for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-     sensors_sprintf(humidity, sht3x.humidity, 2);
-   } else {
-    if(sht1x_available==0)
+    if(sensorUseable(sensors[i], 1)==0&&sensors[i]->sensor_status==2)
      {
-      sensors_sprintf(humidity, sht1x.humidity, 1);
-     } else {
-      sensors_sprintf(humidity, dht22.humidity, 1);
+      sensors_sprintf(humidity, *(sensors[i]->val_humidity), sensors[i]->dpow_humidity);
+      break;
      }
    }
-  end:
   return humidity;
  }
 
@@ -187,18 +207,17 @@ char* ICACHE_FLASH_ATTR humidityToString( void )
 // Convert barometric pressure to string
 char* ICACHE_FLASH_ATTR pressureToString( void )
  {
+  int i;
+  static char pressure[8];
   pressure[0]='\0';
-  if(pressure_valid!=0) goto end;
-  if(ms5637_available==0)
+  for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    sensors_sprintf(pressure, ms5637.pressure, 2);
-   } else {
-    if(bmp180_available==0)
+    if(sensorUseable(sensors[i], 2)==0&&sensors[i]->sensor_status==2)
      {
-      sensors_sprintf(pressure, bmp180.pressure, 2);
+      sensors_sprintf(pressure, *(sensors[i]->val_pressure), sensors[i]->dpow_pressure);
+      break;
      }
    }
-  end:
   return pressure;
  }
 
@@ -206,15 +225,18 @@ char* ICACHE_FLASH_ATTR pressureToString( void )
 // Convert battery voltage to string
 char* ICACHE_FLASH_ATTR batteryVoltageToString( void )
  {
+  static char battery[8];
   int battery_voltage = batteryGetVoltage();
   battery[0]='\0';
   sensors_sprintf(battery, battery_voltage, 3);
   return battery;
  }
 
+
 // Convert WiFi RSSI to string
 char* ICACHE_FLASH_ATTR rssiToString( void )
  {
+  static char rssi[8];
   int rssi_value = wifi_station_get_rssi();
   rssi[0]='\0';
   if(rssi_value!=31) // 31 = Failure
@@ -224,6 +246,8 @@ char* ICACHE_FLASH_ATTR rssiToString( void )
   return rssi;
  }
 
+
+// Format function for sensor data
 int ICACHE_FLASH_ATTR sensors_sprintf( char *buf, int value, int dec_pow )
  {
   char *sign = (value<0?"-":"");

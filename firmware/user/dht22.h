@@ -27,6 +27,9 @@
  #define DHT22_FUNC FUNC_GPIO2
  #define DHT22_GPIO 2
 
+ // Delay first read
+ #define DHT22_READ_DELAY_MS 2000
+
  // Start pulse (>1000us)
  #define DHT22_T_START_US 1500
 
@@ -49,8 +52,8 @@
  struct dhtdata
   {
    uint8_t rawdata[5];
-   int16_t temperature;
-   int16_t humidity;
+   int32_t temperature;
+   uint32_t humidity;
   };
 
  // Functions

@@ -23,14 +23,32 @@
 #ifndef SENSORS_H
  #define SENSORS_H
 
+ struct sensorlist
+  {
+   char *name;
+   int (*func_init)(void*);
+   int (*func_read)(void*);
+   void *sensor_struct;
+   int sensor_status;
+   int *has_temperature;
+   int32_t *val_temperature;
+   int dpow_temperature;
+   int *has_humidity;
+   uint32_t *val_humidity;
+   int dpow_humidity;
+   int *has_pressure;
+   uint32_t *val_pressure;
+   int dpow_pressure;
+  };
+
  void sensorsInit( void );
- void sensorsRead( void );
- int sensorsDone( void );
+ int sensorsRead( int retry );
+ int sensorUseable( struct sensorlist *sensor, int v );
  char* temperatureToString( void );
  char* humidityToString( void );
  char* pressureToString( void );
  char* batteryVoltageToString( void );
  char* rssiToString( void );
- int ICACHE_FLASH_ATTR sensors_sprintf( char *buf, int value, int dec_pow );
+ int sensors_sprintf( char *buf, int value, int dec_pow );
 
 #endif

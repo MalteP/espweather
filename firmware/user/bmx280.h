@@ -80,7 +80,7 @@
    int16_t h4;
    int16_t h5;
    int8_t h6;
-   uint8_t sensor_type;
+   int sensor_type;
    int32_t t_fine;
    int32_t temperature;
    uint32_t pressure;
