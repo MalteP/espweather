@@ -92,7 +92,7 @@
  int bmx280Read( struct bmx280data* d );
 
  // Internal functions
- int bmx280CompensateTemperature( struct bmx280data* d, uint32_t adc_t );
+ int bmx280CompensateTemperature( struct bmx280data* d, int32_t adc_t );
  int bmx280CompensatePressure( struct bmx280data* d, uint32_t adc_p );
  int bmx280CompensateHumidity( struct bmx280data* d, uint32_t adc_h );
 

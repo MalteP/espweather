@@ -82,7 +82,8 @@ int ICACHE_FLASH_ATTR bmx280Init( struct bmx280data* d )
 // Read sensor data and calculate values
 int ICACHE_FLASH_ATTR bmx280Read( struct bmx280data* d )
  {
-  uint32_t adc_t, adc_p, adc_h;
+  int32_t adc_t;
+  uint32_t adc_p, adc_h;
   // Force read, Oversampling: osrs_t 1x, osrs_p 1x, osrs_h 1x
   if(d->sensor_type==TYPE_BME280)
    {
@@ -92,17 +93,17 @@ int ICACHE_FLASH_ATTR bmx280Read( struct bmx280data* d )
   // Wait until measurement is completed
   os_delay_us(8000);
   // Read uncompensated temperature value
-  adc_t = (uint32_t)i2cReadRegister24(BMX280_ADDR, BMX280_REG_TEMP) >> 4;
+  adc_t = (int32_t)i2cReadRegister24(BMX280_ADDR, BMX280_REG_TEMP) >> 4;
   // Calculate temperature
   bmx280CompensateTemperature(d, adc_t);
   // Read uncompensated pressure value
-  adc_p = (uint32_t)i2cReadRegister24(BMX280_ADDR, BMX280_REG_PRES) >> 4;
+  adc_p = i2cReadRegister24(BMX280_ADDR, BMX280_REG_PRES) >> 4;
   // Calculate pressure
   bmx280CompensatePressure(d, adc_p);
   if(d->sensor_type==TYPE_BME280)
    {
     // Read uncompensated humidity value
-    adc_h = (uint32_t)i2cReadRegister16(BMX280_ADDR, BMX280_REG_HUM);
+    adc_h = i2cReadRegister16(BMX280_ADDR, BMX280_REG_HUM);
     // Calculate humidity
     bmx280CompensateHumidity(d, adc_h);
    } else {
@@ -114,7 +115,7 @@ int ICACHE_FLASH_ATTR bmx280Read( struct bmx280data* d )
 
 
 // Calculate compensated temperature (code from datasheet)
-int ICACHE_FLASH_ATTR bmx280CompensateTemperature( struct bmx280data* d, uint32_t adc_t )
+int ICACHE_FLASH_ATTR bmx280CompensateTemperature( struct bmx280data* d, int32_t adc_t )
  {
   int32_t var1, var2;
   var1 = ((((adc_t>>3) - ((int32_t)d->t1<<1))) * ((int32_t)d->t2)) >> 11;
