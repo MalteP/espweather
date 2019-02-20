@@ -68,10 +68,11 @@ int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
   shtSendAck();
   rtn = 0;
 
+  endfunction:
+
   // Reduce power consumption through pullup - same port as i2c
   SHT_CLK_HIGH();
 
-  endfunction:
   return rtn;
  }
 
