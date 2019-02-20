@@ -82,6 +82,7 @@ mqtt_dns_found(const char *name, ip_addr_t *ipaddr, void *arg)
 		os_memcpy(client->pCon->proto.tcp->remote_ip, &ipaddr->addr, 4);
 		if (client->security) {
 #ifdef MQTT_SSL_ENABLE
+			espconn_secure_set_size(ESPCONN_CLIENT, 5120); // set SSL buffer size
 			espconn_secure_connect(client->pCon);
 #else
 			INFO("TCP: Do not support SSL\r\n");
