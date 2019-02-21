@@ -3,8 +3,8 @@
 // #############################################################################
 // # push.c - Push data to HTTP service or MQTT server                         #
 // #############################################################################
-// #            Version: 1.2 - Compiler: esp-open-sdk 1.5.2 (Linux)            #
-// #  (c) 2015-2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
+// #            Version: 1.2 - Compiler: esp-open-sdk 2.1.0 (Linux)            #
+// #  (c) 2015-2019 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de   #
 // #############################################################################
 // #  This program is free software; you can redistribute it and/or modify it  #
 // #   under the terms of the GNU General Public License as published by the   #
