@@ -25,7 +25,6 @@
 
 
 // This function will replace a substring with a replacement inside a string
-// FIXME: Check for length!
 bool strreplace( char* str, char* sub, char* rep, unsigned int len )
  {
   char* temp;
@@ -33,17 +32,20 @@ bool strreplace( char* str, char* sub, char* rep, unsigned int len )
   char* remaining;
   unsigned int lsub;
   unsigned int lrep;
-  // Find substring
-  start = os_strstr(str, sub);
-  if(start==NULL) return false;
   // Length of substring and replacement
   lsub = os_strlen(sub);
   lrep = os_strlen(rep);
-  if(lsub==0||lrep==0) return false;
+  if(lsub==0) return false;
+  // Find substring
+  start = os_strstr(str, sub);
+  if(start==NULL) return false;
+  // Check total length
+  if(os_strlen(str)-lsub+lrep+1>len) return false;
   // Position of remaining string
   remaining = start + lsub;
   // Alloc temporary buffer and copy
   temp=os_malloc(len);
+  if(temp==NULL) return false;
   os_strcpy(temp, remaining);
   // Replace substring
   os_strcpy(start, rep);
@@ -51,4 +53,4 @@ bool strreplace( char* str, char* sub, char* rep, unsigned int len )
   os_strcat(str, temp);
   os_free(temp);
   return true;
- }
+}
