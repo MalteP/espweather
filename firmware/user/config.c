@@ -151,6 +151,13 @@ void ICACHE_FLASH_ATTR configCheckWifiMode( void )
       wifi_set_sleep_type(NONE_SLEEP_T); // No sleep possible
      }
    }
+  // Only attempt to reconnect in STA mode, scanning might break AP mode
+  if(mode==1)
+   {
+    wifi_station_set_reconnect_policy(true);
+   } else {
+    wifi_station_set_reconnect_policy(false);
+   }
  }
 
 
