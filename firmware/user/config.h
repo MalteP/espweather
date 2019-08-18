@@ -120,6 +120,7 @@
  void configRestart( void );
  void configInitIP( void );
  void configInitSoftAP( void );
+ void configInitReconnectPolicy( void );
  void statusLed( uint8_t mode );
 
 #endif

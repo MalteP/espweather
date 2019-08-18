@@ -151,13 +151,6 @@ void ICACHE_FLASH_ATTR configCheckWifiMode( void )
       wifi_set_sleep_type(NONE_SLEEP_T); // No sleep possible
      }
    }
-  // Only attempt to reconnect in STA mode, scanning might break AP mode
-  if(mode==1)
-   {
-    wifi_station_set_reconnect_policy(true);
-   } else {
-    wifi_station_set_reconnect_policy(false);
-   }
  }
 
 
@@ -221,6 +214,20 @@ void ICACHE_FLASH_ATTR configInitSoftAP( void )
   config.authmode = AUTH_WPA_WPA2_PSK;
   #endif
   wifi_softap_set_config_current(&config);
+ }
+
+
+// Reconnect policy configuration
+void ICACHE_FLASH_ATTR configInitReconnectPolicy( void )
+ {
+  int mode = wifi_get_opmode();
+  // Only attempt to reconnect in STA mode, scanning might break AP mode
+  if(mode==1)
+   {
+    wifi_station_set_reconnect_policy(true);
+   } else {
+    wifi_station_set_reconnect_policy(false);
+   }
  }
 
 

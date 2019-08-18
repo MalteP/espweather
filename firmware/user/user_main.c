@@ -106,6 +106,7 @@ void ICACHE_FLASH_ATTR init_done(void)
   // Init SoftAP and IP configuration
   configInitSoftAP();
   configInitIP();
+  configInitReconnectPolicy();
 
   // Init sensors
   sensorsInit();
@@ -119,5 +120,3 @@ void ICACHE_FLASH_ATTR init_done(void)
     statusLed(LED_BLINK);
    }
  }
-
-
