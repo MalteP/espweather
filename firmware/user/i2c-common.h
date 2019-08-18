@@ -41,7 +41,6 @@
 
  // Timings
  #define I2C_DELAY_US 10
- #define I2C_DELAY()  os_delay_us(I2C_DELAY_US)
 
  // Send stop in i2cWriteCmd()
  #define I2C_NO_STOP   0
@@ -61,5 +60,6 @@
  int i2cSendStop( void );
  int i2cWriteByte( int byte );
  int i2cReadByte( int ack );
+ void i2cDelay( void );
 
 #endif

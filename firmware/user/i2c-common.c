@@ -175,22 +175,22 @@ int i2cSendStart( void )
  {
   I2C_SCK_HIGH();
   I2C_SDA_HIGH();
-  I2C_DELAY();
+  i2cDelay();
   I2C_SDA_LOW();
-  I2C_DELAY();
+  i2cDelay();
   I2C_SCK_LOW();
-  I2C_DELAY();
+  i2cDelay();
  }
 
 // Send I2C stop condition
 int i2cSendStop( void )
  {
   I2C_SDA_LOW();
-  I2C_DELAY();
+  i2cDelay();
   I2C_SCK_HIGH();
-  I2C_DELAY();
+  i2cDelay();
   I2C_SDA_HIGH();
-  I2C_DELAY();
+  i2cDelay();
  }
 
 // Write byte to slave
@@ -206,21 +206,21 @@ int i2cWriteByte( int byte )
      } else {
       I2C_SDA_LOW();
      }
-    I2C_DELAY();
+    i2cDelay();
     I2C_SCK_HIGH();
-    I2C_DELAY();
+    i2cDelay();
     I2C_SCK_LOW();
-    I2C_DELAY();
+    i2cDelay();
     byte <<= 1;
    }
   // Read ACK from slave
   I2C_SDA_HIGH();
-  I2C_DELAY();
+  i2cDelay();
   I2C_SCK_HIGH();
-  I2C_DELAY();
+  i2cDelay();
   bit = I2C_SDA_READ();
   I2C_SCK_LOW();
-  I2C_DELAY();
+  i2cDelay();
   return bit;
  }
 
@@ -233,13 +233,13 @@ int i2cReadByte( int ack )
   for(bit=0;bit<8;bit++)
    {
     I2C_SDA_HIGH();
-    I2C_DELAY();
+    i2cDelay();
     I2C_SCK_HIGH();
-    I2C_DELAY();
+    i2cDelay();
     byte <<= 1;
     byte |= I2C_SDA_READ();
     I2C_SCK_LOW();
-    I2C_DELAY();
+    i2cDelay();
    }
   // Send ACK/NACK to slave
   if(ack)
@@ -248,10 +248,16 @@ int i2cReadByte( int ack )
    } else {
     I2C_SDA_HIGH();
    }
-  I2C_DELAY();
+  i2cDelay();
   I2C_SCK_HIGH();
-  I2C_DELAY();
+  i2cDelay();
   I2C_SCK_LOW();
-  I2C_DELAY();
+  i2cDelay();
   return byte;
+ }
+
+// Delay between pulses
+void i2cDelay( void )
+ {
+  os_delay_us(I2C_DELAY_US);
  }
