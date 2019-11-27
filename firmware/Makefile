@@ -222,17 +222,17 @@ htmlflash: $(FW_BASE)/webpages.espfs
 
 image: checkdirs $(TARGET_OUT) $(FW_BASE) $(FW_BASE)/webpages.espfs
 ifeq ("$(FLASH_SIZE)","4m")
-	$(Q) dd if=/dev/zero count=$$((16#80000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+	$(Q) dd if=/dev/zero count=$$((0x80000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
 else
-	$(Q) dd if=/dev/zero count=$$((16#100000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+	$(Q) dd if=/dev/zero count=$$((0x100000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
 endif
-	$(Q) dd if=$(FW_BASE)/0x00000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#00000)) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=$(FW_BASE)/webpages.espfs of=$(FW_BASE)/firmware.bin seek=$$((16#`echo $(ESPFS_POS) | cut -c 3-`)) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=$(FW_BASE)/0x36000.bin of=$(FW_BASE)/firmware.bin seek=$$((16#36000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/0x00000.bin of=$(FW_BASE)/firmware.bin seek=$$((0x00000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/webpages.espfs of=$(FW_BASE)/firmware.bin seek=$$(($(ESPFS_POS))) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/0x36000.bin of=$(FW_BASE)/firmware.bin seek=$$((0x36000)) oflag=seek_bytes conv=notrunc status=none
 ifeq ("$(FLASH_SIZE)","4m")
-	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((16#7C000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((0x7C000)) oflag=seek_bytes conv=notrunc status=none
 else
-	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((16#FC000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((0xFC000)) oflag=seek_bytes conv=notrunc status=none
 endif
 
 clean:
