@@ -28,7 +28,7 @@ USE_HEATSHRINK ?= yes
 
 
 # Flash size of ESP module in MBit (4m: 512KB / 8m: 1MB)
-FLASH_SIZE ?= 4m
+FLASH_SIZE ?= 8m
 
 # Enable SSL Support for HTTP and MQTT client (needs 8m flash)
 ifeq ("$(FLASH_SIZE)","4m")
