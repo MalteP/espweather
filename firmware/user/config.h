@@ -29,9 +29,6 @@
  // GPIO for status LED
  #define LEDGPIO 14
 
- // Flash position for config data
- #define ESP_PARAM_SEC 0x7A
-
  // RTC magic value for detecting first start
  #define RTC_MAGIC 0xC0DEBABE
 

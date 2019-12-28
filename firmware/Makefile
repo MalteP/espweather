@@ -26,15 +26,27 @@ YUI-COMPRESSOR ?= /usr/bin/yui-compressor
 # any support in the browser.
 USE_HEATSHRINK ?= yes
 
-# Enable SSL Support for HTTP and MQTT client
-ENABLE_SSL ?= yes
 
 # Flash size of ESP module in MBit (4m: 512KB / 8m: 1MB)
 FLASH_SIZE ?= 4m
 
+# Enable SSL Support for HTTP and MQTT client (needs 8m flash)
+ifeq ("$(FLASH_SIZE)","4m")
+ENABLE_SSL ?= no
+else
+ENABLE_SSL ?= yes
+endif
+
 # Position and maximum length of espfs in flash memory
 ESPFS_POS = 0x20000
 ESPFS_SIZE = 0x16000
+
+# Application configuration flash position
+ifeq ("$(FLASH_SIZE)","4m")
+ESP_PARAM_SEC = 0x7A
+else
+ESP_PARAM_SEC = 0xFA
+endif
 
 # -------------- End of esphttpd config options -------------
 
@@ -78,8 +90,8 @@ LIBS		= c gcc hal phy pp net80211 lwip wpa main
 
 # compiler flags using during compilation of source files
 CFLAGS		= -Os -std=c99 -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions \
-		  -nostdlib -mlongcalls -mtext-section-literals -D__ets__ -DICACHE_FLASH \
-		  -Wno-address -DESPFS_POS=$(ESPFS_POS) -DESPFS_SIZE=$(ESPFS_SIZE) \
+		  -nostdlib -mlongcalls -mtext-section-literals -D__ets__ -DICACHE_FLASH -Wno-address \
+		  -DESPFS_POS=$(ESPFS_POS) -DESPFS_SIZE=$(ESPFS_SIZE) -DESP_PARAM_SEC=$(ESP_PARAM_SEC)\
 		  -DVERSTRING=\"$(VERSION)\" -DHOSTSTRING=\"$(USERNAME)@$(HOSTNAME)\"
 
 # extra options for ssl support
@@ -93,6 +105,24 @@ LDFLAGS		= -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static
 
 # linker script used for the above linkier step
 LD_SCRIPT	= eagle.app.v6.ld
+
+# SDK init data
+SDK_INIT	= esp_init_data_default.bin
+ifeq ("$(wildcard $(SDK_BASE)/bin/$(SDK_INIT))","")
+SDK_INIT	= esp_init_data_default_v08.bin
+endif
+
+# SDK blank flash
+SDK_BLANK	= blank.bin
+
+# extra arguments for firmware filename
+FW_EXTRAS	:= -$(FLASH_SIZE)
+ifeq ("$(ENABLE_SSL)","yes")
+FW_EXTRAS	:= $(FW_EXTRAS)-ssl
+endif
+
+# firmware filename
+FW_FILE		= firmware$(FW_EXTRAS).bin
 
 # various paths from the SDK used in this project
 SDK_LIBDIR	= lib
@@ -160,7 +190,12 @@ all: checkdirs $(TARGET_OUT) $(FW_BASE) size
 
 $(LD_SCRIPT_NEW):
 	$(vecho) "GEN $@"
+ifeq ("$(FLASH_SIZE)","4m")
 	$(Q) cat $(LD_SCRIPT_ORIG) | sed "s/irom0_0_seg : .*/irom0_0_seg :                         org = 0x40236000, len = 0x44000/g" > $(LD_SCRIPT_NEW)
+else
+	$(Q) cat $(LD_SCRIPT_ORIG) | sed "s/irom0_0_seg : .*/irom0_0_seg :                         org = 0x40236000, len = 0xC4000/g" > $(LD_SCRIPT_NEW)
+endif
+
 
 $(TARGET_OUT): $(APP_AR) $(LD_SCRIPT_NEW)
 	$(vecho) "LD $@"
@@ -204,13 +239,13 @@ endif
 
 defaultflash:
 ifeq ("$(FLASH_SIZE)","4m")
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7B000 $(SDK_BASE)/bin/blank.bin
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7C000 $(SDK_BASE)/bin/esp_init_data_default.bin
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7E000 $(SDK_BASE)/bin/blank.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7B000 $(SDK_BASE)/bin/$(SDK_BLANK)
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7C000 $(SDK_BASE)/bin/$(SDK_INIT)
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0x7E000 $(SDK_BASE)/bin/$(SDK_BLANK)
 else
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFB000 $(SDK_BASE)/bin/blank.bin
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFC000 $(SDK_BASE)/bin/esp_init_data_default.bin
-	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFE000 $(SDK_BASE)/bin/blank.bin
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFB000 $(SDK_BASE)/bin/$(SDK_BLANK)
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFC000 $(SDK_BASE)/bin/$(SDK_INIT)
+	$(Q) $(ESPTOOL) --port $(ESPPORT) --baud $(ESPBAUD) write_flash --flash_size $(FLASH_SIZE) 0xFE000 $(SDK_BASE)/bin/$(SDK_BLANK)
 endif
 
 lib/espfs/mkespfsimage/mkespfsimage: lib/espfs/mkespfsimage/
@@ -222,17 +257,17 @@ htmlflash: $(FW_BASE)/webpages.espfs
 
 image: checkdirs $(TARGET_OUT) $(FW_BASE) $(FW_BASE)/webpages.espfs
 ifeq ("$(FLASH_SIZE)","4m")
-	$(Q) dd if=/dev/zero count=$$((0x80000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+	$(Q) dd if=/dev/zero count=$$((0x80000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/$(FW_FILE)
 else
-	$(Q) dd if=/dev/zero count=$$((0x100000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/firmware.bin
+	$(Q) dd if=/dev/zero count=$$((0x100000)) iflag=count_bytes status=none | tr "\000" "\377" > $(FW_BASE)/$(FW_FILE)
 endif
-	$(Q) dd if=$(FW_BASE)/0x00000.bin of=$(FW_BASE)/firmware.bin seek=$$((0x00000)) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=$(FW_BASE)/webpages.espfs of=$(FW_BASE)/firmware.bin seek=$$(($(ESPFS_POS))) oflag=seek_bytes conv=notrunc status=none
-	$(Q) dd if=$(FW_BASE)/0x36000.bin of=$(FW_BASE)/firmware.bin seek=$$((0x36000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/0x00000.bin of=$(FW_BASE)/$(FW_FILE) seek=$$((0x00000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/webpages.espfs of=$(FW_BASE)/$(FW_FILE) seek=$$(($(ESPFS_POS))) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(FW_BASE)/0x36000.bin of=$(FW_BASE)/$(FW_FILE) seek=$$((0x36000)) oflag=seek_bytes conv=notrunc status=none
 ifeq ("$(FLASH_SIZE)","4m")
-	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((0x7C000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(SDK_BASE)/bin/$(SDK_INIT) of=$(FW_BASE)/$(FW_FILE) seek=$$((0x7C000)) oflag=seek_bytes conv=notrunc status=none
 else
-	$(Q) dd if=$(SDK_BASE)/bin/esp_init_data_default.bin of=$(FW_BASE)/firmware.bin seek=$$((0xFC000)) oflag=seek_bytes conv=notrunc status=none
+	$(Q) dd if=$(SDK_BASE)/bin/$(SDK_INIT) of=$(FW_BASE)/$(FW_FILE) seek=$$((0xFC000)) oflag=seek_bytes conv=notrunc status=none
 endif
 
 clean:
