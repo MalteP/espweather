@@ -25,7 +25,7 @@
 
 
 // This function will replace a substring with a replacement inside a string
-bool strreplace( char* str, char* sub, char* rep, unsigned int len )
+bool ICACHE_FLASH_ATTR strreplace( char* str, char* sub, char* rep, unsigned int len )
  {
   char* temp;
   char* start;

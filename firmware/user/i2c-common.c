@@ -24,7 +24,7 @@
 #include "i2c-common.h"
 
 
-void i2cInit( void )
+void ICACHE_FLASH_ATTR i2cInit( void )
  {
   // Disable GPIO interrupts
   ETS_INTR_LOCK();
@@ -171,7 +171,7 @@ uint32_t ICACHE_FLASH_ATTR i2cReadRegister24( uint8_t device, uint8_t value )
  }
 
 // Send I2C start condition
-int i2cSendStart( void )
+int ICACHE_FLASH_ATTR i2cSendStart( void )
  {
   I2C_SCK_HIGH();
   I2C_SDA_HIGH();
@@ -183,7 +183,7 @@ int i2cSendStart( void )
  }
 
 // Send I2C stop condition
-int i2cSendStop( void )
+int ICACHE_FLASH_ATTR i2cSendStop( void )
  {
   I2C_SDA_LOW();
   i2cDelay();
@@ -194,7 +194,7 @@ int i2cSendStop( void )
  }
 
 // Write byte to slave
-int i2cWriteByte( int byte )
+int ICACHE_FLASH_ATTR i2cWriteByte( int byte )
  {
   uint8 bit;
   // Write data
@@ -225,7 +225,7 @@ int i2cWriteByte( int byte )
  }
 
 // Read byte from slave
-int i2cReadByte( int ack )
+int ICACHE_FLASH_ATTR i2cReadByte( int ack )
  {
   uint8 byte = 0;
   uint8 bit;
@@ -257,7 +257,7 @@ int i2cReadByte( int ack )
  }
 
 // Delay between pulses
-void i2cDelay( void )
+void ICACHE_FLASH_ATTR i2cDelay( void )
  {
   os_delay_us(I2C_DELAY_US);
  }
