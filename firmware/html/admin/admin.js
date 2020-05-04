@@ -121,7 +121,7 @@ function load_wifi_settings( callback )
    })
    .error(function(status, responseText, xhr) {
     block_ui(0);
-    $("#networks-table").fill(EE("p", "Could not load networks."));
+    $("#networks-table").fill(EE("p", "Could not load network settings."));
     error_ui("Could not load network settings!", xhr);
     callback();
    });
@@ -198,7 +198,7 @@ function refresh_wifi()
   $.request("get", "wifiscan.cgi")
    .then(function(txt) {
     var json = $.parseJSON(txt);
-    if(json.inProgress=="0" && json.APs.length>1)
+    if(json.inProgress=="0" && json.APs.length>0)
      {
       $("#networks-table").fill();
       json.APs.sort(function(a, b) {return b.rssi-a.rssi});
@@ -212,11 +212,11 @@ function refresh_wifi()
       });
       window.setTimeout(refresh_wifi, 30000);
      } else {
-      window.setTimeout(refresh_wifi, 1000);
+      window.setTimeout(refresh_wifi, 2000);
      }
    })
    .error(function(status, responseText, xhr) {
-    $("#networks-table").fill(EE("p", "Error loading data: "+status));
+    $("#networks-table").fill(EE("p", "Could not get network list."));
    });
  }
 
