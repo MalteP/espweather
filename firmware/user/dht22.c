@@ -58,10 +58,10 @@ void ICACHE_FLASH_ATTR dht22TimerCb( void *arg )
 int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
  {
   unsigned int i;
-  unsigned int bitctr = 0;
+  unsigned int bitctr = 255;
   uint8_t chksum = 0;
 
-  // Initial read delay
+  // Initial read delay, sensor not ready
   if(dht22delay>0) return -1;
 
   // Reset data
@@ -151,7 +151,14 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
   ets_intr_unlock();
 
   // Print errormessage
-  os_printf("DHT22 read failed. %d bits received.\n", bitctr);
+  os_printf("DHT22: ");
+  if(bitctr==255)
+   {
+    os_printf("No response from sensor.\n");
+   } else {
+    os_printf("Communication error, %d bits received.\n", bitctr);
+   }
+
   return -1;
 
   endfunction:
