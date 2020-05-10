@@ -23,6 +23,27 @@
 #ifndef SENSORS_H
  #define SENSORS_H
 
+ // Macros for sensorsRead() first_read variable
+ #define SENSORS_FIRST_READ_FALSE 0
+ #define SENSORS_FIRST_READ_TRUE  1
+
+ // Macros for internal sensor_status
+ #define SENSORS_STATUS_NOSENSOR -1
+ #define SENSORS_STATUS_FOUND     0
+ #define SENSORS_STATUS_FAILED    1
+ #define SENSORS_STATUS_OK        2
+ #define SENSORS_STATUS_PENDING   3
+
+ // Convert return code from sensor functions to internal status
+ // notice that SENSOR_RTN_FAILED (-1) / _OK (0) / _PENDING (1) is equivalent
+ // to internal status SENSORS_STATUS_FAILED (1) / _OK (2) / _PENDING (3)
+ #define SENSOR_TO_SENSORS_INCREMENT 2
+
+ // Macros for return value of sensorsRead()
+ #define SENSORS_RETURN_FAILED -1
+ #define SENSORS_RETURN_OK      0
+ #define SENSORS_RETURN_PENDING 1
+
  struct sensorlist
   {
    char *name;
@@ -42,7 +63,7 @@
   };
 
  void sensorsInit( void );
- int sensorsRead( int retry );
+ int sensorsRead( int first_read );
  int sensorUseable( struct sensorlist *sensor, int v );
  char* temperatureToString( void );
  char* humidityToString( void );

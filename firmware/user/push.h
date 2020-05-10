@@ -28,6 +28,7 @@
  #define PUSH_CHECK_INTERVAL_MSEC 500
  #define PUSH_ERROR_DELAY         5
  #define PUSH_TIMEOUT_SEC         45
+ #define PUSH_READ_MAX            5
  #define PUSH_RETRIES_MAX         5
  #define PUSH_REDIRECT_MAX        5
 

@@ -22,6 +22,7 @@
 
 #include <esp8266.h>
 #include "sensors.h"
+#include "sensor-common.h"
 #include "dht22.h"
 #include "sht1x.h"
 #include "sht3x.h"
@@ -63,33 +64,34 @@ void ICACHE_FLASH_ATTR sensorsInit( void )
   for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
     sensors[i]->sensor_status = (*(sensors[i]->func_init))(sensors[i]->sensor_struct);
-    os_printf("Sensors: Init %s? %s\n", sensors[i]->name, (sensors[i]->sensor_status<0?"no":"yes"));
+    os_printf("Sensors: Init %s? %s\n", sensors[i]->name, (sensors[i]->sensor_status<SENSORS_STATUS_FOUND?"no":"yes"));
    }
  }
 
 
 // Read available sensors
-int ICACHE_FLASH_ATTR sensorsRead( int retry )
+int ICACHE_FLASH_ATTR sensorsRead( int first_read )
  {
   static ETSTimer limitTimer;
   int i, v;
   int status;
-  int rtn = 0;
+  int rtn = SENSORS_RETURN_OK;
   // Limit does not apply for reading failed sensors again
-  if(retry==0)
+  if(first_read!=SENSORS_FIRST_READ_FALSE)
    {
     if(read_limit!=0) return 1;
     read_limit = 1;
    }
   // Reset status on first try / reset status for failed sensors
-  // (where status -1=no sensor, 0=found, 1=read failed, 2=read ok)
   for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    if(retry==0)
+    if(first_read!=SENSORS_FIRST_READ_FALSE)
      {
-      if(sensors[i]->sensor_status>0) sensors[i]->sensor_status = 0;
+      // Reset all available sensors to found state
+      if(sensors[i]->sensor_status>SENSORS_STATUS_FOUND) sensors[i]->sensor_status = SENSORS_STATUS_FOUND;
      } else {
-      if(sensors[i]->sensor_status==1) sensors[i]->sensor_status = 0;
+      // Will read again sensors in read failed or read pending state
+      if(sensors[i]->sensor_status==SENSORS_STATUS_FAILED||sensors[i]->sensor_status==SENSORS_STATUS_PENDING) sensors[i]->sensor_status = SENSORS_STATUS_FOUND;
      }
    }
    // Find and read sensors for all known values
@@ -100,25 +102,30 @@ int ICACHE_FLASH_ATTR sensorsRead( int retry )
        // Check if current sensor was found and can deliver needed value
        if(sensorUseable(sensors[i], v)!=0) continue;
        // Check if sensor needs to be read
-       if(sensors[i]->sensor_status==0)
+       if(sensors[i]->sensor_status==SENSORS_STATUS_FOUND)
         {
          status = (*(sensors[i]->func_read))(sensors[i]->sensor_struct);
-         os_printf("Sensors: Read %s %s\n", sensors[i]->name, (status<0?"failed":"ok"));
-         // Status from function -1 on error 0 if ok -> 1 on error, 2 if ok
-         sensors[i]->sensor_status = status + 2;
-         // Sensor read failed, change return code
-         if(status!=0)
+         os_printf("Sensors: Read %s %s\n", sensors[i]->name, (status<=SENSOR_RTN_FAILED?"failed":(status==SENSOR_RTN_OK?"ok":"pending")));
+         // Translate return code from sensor function to internal status code
+         sensors[i]->sensor_status = status + SENSOR_TO_SENSORS_INCREMENT;
+         // If sensor read is in failed or pending state, change return code
+         if(status!=SENSOR_RTN_OK)
           {
-           rtn = -1;
+           if(status==SENSOR_RTN_PENDING)
+            {
+             rtn = SENSORS_RETURN_PENDING; // Read pending (should not increment failed counter)
+            } else {
+             rtn = SENSORS_RETURN_FAILED;  // Read failed
+            }
           }
         }
        // Done, start with next value
        break;
       }
     }
-  if(retry==0)
+  if(first_read!=SENSORS_FIRST_READ_FALSE)
    {
-    // Reading is only allowed every 5 sec.
+    // Reading is only allowed every 5 sec, timer will reset the read_limit flag
     os_timer_disarm(&limitTimer);
     os_timer_setfn(&limitTimer, readLimitCb, NULL);
     os_timer_arm(&limitTimer, 5000, 0);
@@ -131,7 +138,7 @@ int ICACHE_FLASH_ATTR sensorsRead( int retry )
 int ICACHE_FLASH_ATTR sensorUseable( struct sensorlist *sensor, int v )
  {
   // Skip if not detected
-  if(sensor->sensor_status<0) return -1;
+  if(sensor->sensor_status<SENSORS_STATUS_FOUND) return -1;
   // Check if sensor provides value
   switch(v)
    {
@@ -176,7 +183,7 @@ char* ICACHE_FLASH_ATTR temperatureToString( void )
   temperature[0]='\0';
   for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    if(sensorUseable(sensors[i], 0)==0&&sensors[i]->sensor_status==2)
+    if(sensorUseable(sensors[i], 0)==0&&sensors[i]->sensor_status==SENSORS_STATUS_OK)
      {
       sensors_sprintf(temperature, *(sensors[i]->val_temperature), sensors[i]->dpow_temperature);
       break;
@@ -194,7 +201,7 @@ char* ICACHE_FLASH_ATTR humidityToString( void )
   humidity[0]='\0';
   for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    if(sensorUseable(sensors[i], 1)==0&&sensors[i]->sensor_status==2)
+    if(sensorUseable(sensors[i], 1)==0&&sensors[i]->sensor_status==SENSORS_STATUS_OK)
      {
       sensors_sprintf(humidity, *(sensors[i]->val_humidity), sensors[i]->dpow_humidity);
       break;
@@ -212,7 +219,7 @@ char* ICACHE_FLASH_ATTR pressureToString( void )
   pressure[0]='\0';
   for(i=0; i<sizeof(sensors)/sizeof(*sensors); i++)
    {
-    if(sensorUseable(sensors[i], 2)==0&&sensors[i]->sensor_status==2)
+    if(sensorUseable(sensors[i], 2)==0&&sensors[i]->sensor_status==SENSORS_STATUS_OK)
      {
       sensors_sprintf(pressure, *(sensors[i]->val_pressure), sensors[i]->dpow_pressure);
       break;

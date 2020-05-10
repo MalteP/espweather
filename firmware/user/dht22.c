@@ -63,7 +63,7 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
   uint8_t chksum = 0;
 
   // Initial read delay, sensor not yet ready
-  if(dht22delay>0) return SENSOR_RTN_FAILED;
+  if(dht22delay>0) return SENSOR_RTN_PENDING;
 
   // Reset data
   for(i=0; i<5; i++)

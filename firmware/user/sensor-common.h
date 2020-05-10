@@ -26,5 +26,6 @@
  // Return values for every sensor function
  #define SENSOR_RTN_FAILED -1
  #define SENSOR_RTN_OK      0
+ #define SENSOR_RTN_PENDING 1
 
 #endif

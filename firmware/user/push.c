@@ -32,6 +32,7 @@
 enum push_states pushState;
 uint8_t pushErrorDelay;
 uint8_t pushRetries;
+int8_t pushSensorState;
 uint8_t pushRedirect;
 MQTT_Client mqttClient;
 
@@ -42,6 +43,7 @@ void ICACHE_FLASH_ATTR pushSensorData( void )
   pushState = PUSH_INIT;
   pushErrorDelay = 0;
   pushRetries = 0;
+  pushSensorState = SENSORS_RETURN_OK;
   pushRedirect = 0;
   os_printf("Push: Start\n");
   statusLed(LED_FLASH1);
@@ -80,10 +82,16 @@ void ICACHE_FLASH_ATTR pushTimerCb( void *arg )
      ++pushState;
      break;
     case PUSH_READ:
-     if(sensorsRead(pushRetries)<0)
+     // Do not set "first read" flag if there are any retries or sensors in pending state
+     pushSensorState = sensorsRead(pushSensorState==SENSORS_RETURN_PENDING||pushRetries>0?SENSORS_FIRST_READ_FALSE:SENSORS_FIRST_READ_TRUE);
+     if(pushSensorState!=SENSORS_RETURN_OK)
       {
        // At least one sensor value failed, retry five times then continue anyway.
-       if(++pushRetries>=5) ++pushState;
+       // Counter will not be incremented if a sensor is in pending state
+       if(pushSensorState==SENSORS_RETURN_FAILED)
+        {
+         if(++pushRetries>=PUSH_READ_MAX) ++pushState;
+        }
       } else {
        // Reading done
        ++pushState;
