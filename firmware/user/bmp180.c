@@ -22,6 +22,7 @@
 
 #include <esp8266.h>
 #include "i2c-common.h"
+#include "sensor-common.h"
 #include "bmp180.h"
 
 
@@ -29,8 +30,8 @@
 int ICACHE_FLASH_ATTR bmpInit( struct bmpdata* d )
  {
   i2cInit();
-  if(i2cWriteRegister8(BMP180_ADDR, BMP180_SRESET, BMP180_SRESET_V)!=0) return -1;
-  if(i2cReadRegister8(BMP180_ADDR, BMP180_CHIPID)!=BMP180_CHIPID_V) return -1;
+  if(i2cWriteRegister8(BMP180_ADDR, BMP180_SRESET, BMP180_SRESET_V)!=0) return SENSOR_RTN_FAILED;
+  if(i2cReadRegister8(BMP180_ADDR, BMP180_CHIPID)!=BMP180_CHIPID_V) return SENSOR_RTN_FAILED;
   // Read calibration data
   d->ac1 = (int16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC1);
   d->ac2 = (int16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_AC2);
@@ -44,7 +45,7 @@ int ICACHE_FLASH_ATTR bmpInit( struct bmpdata* d )
   d->mc = (int16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_MC);
   d->md = (int16_t) i2cReadRegister16(BMP180_ADDR, BMP180_REG_MD);
   //os_printf("BMP180 calibration values: AC1=%d, AC2=%d, AC3=%d, AC4=%u, AC5=%u, AC6=%u, B1=%d, B2=%d, MB=%d, MC=%d, MD=%d\n", d->ac1, d->ac2, d->ac3, d->ac4, d->ac5, d->ac6, d->b1, d->b2, d->mb, d->mc, d->md );
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 
@@ -54,11 +55,11 @@ int ICACHE_FLASH_ATTR bmpRead( struct bmpdata* d )
   int32_t x1, x2, x3, b3, b5, b6;
   uint32_t b4, b7;
   // Read uncompensated temperature value
-  if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, BMP180_TEMP)!=0) return -1;
+  if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, BMP180_TEMP)!=0) return SENSOR_RTN_FAILED;
   os_delay_us(5000);
   d->ut = (int32_t) i2cReadRegister16(BMP180_ADDR, BMP180_OUT_MSB);
   // Read uncompensated pressure value
-  if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, 0x34+(BMP180_OSS<<6))!=0) return -1;
+  if(i2cWriteRegister8(BMP180_ADDR, BMP180_CTRL, 0x34+(BMP180_OSS<<6))!=0) return SENSOR_RTN_FAILED;
   os_delay_us(2000);
   os_delay_us(3000<<BMP180_OSS);
   d->up = (int32_t) i2cReadRegister24(BMP180_ADDR, BMP180_OUT_MSB) >> (8-BMP180_OSS);
@@ -90,5 +91,5 @@ int ICACHE_FLASH_ATTR bmpRead( struct bmpdata* d )
   d->pressure = d->pressure + (x1 + x2 + 3791) / 16;
   // Done.
   os_printf("BMP180: t=%ld, p=%ld\n", (long)d->temperature, (long)d->pressure);
-  return 0;
+  return SENSOR_RTN_OK;
  }

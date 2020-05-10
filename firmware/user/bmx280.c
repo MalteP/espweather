@@ -22,6 +22,7 @@
 
 #include <esp8266.h>
 #include "i2c-common.h"
+#include "sensor-common.h"
 #include "bmx280.h"
 
 
@@ -31,7 +32,7 @@ int ICACHE_FLASH_ATTR bmx280Init( struct bmx280data* d )
   uint8_t chip_id;
   uint16_t temp_h4;
   i2cInit();
-  if(i2cWriteRegister8(BMX280_ADDR, BMX280_SRESET, BMX280_SRESET_V)!=0) return -1;
+  if(i2cWriteRegister8(BMX280_ADDR, BMX280_SRESET, BMX280_SRESET_V)!=0) return SENSOR_RTN_FAILED;
   chip_id = i2cReadRegister8(BMX280_ADDR, BMX280_CHIPID);
   if(chip_id==BMX280_ID_BMP1||chip_id==BMX280_ID_BMP2||chip_id==BMX280_ID_BMP3)
    {
@@ -41,7 +42,7 @@ int ICACHE_FLASH_ATTR bmx280Init( struct bmx280data* d )
      {
       d->sensor_type = TYPE_BME280;
      } else {
-      return -1;
+      return SENSOR_RTN_FAILED;
      }
    }
   // Read calibration data
@@ -75,7 +76,7 @@ int ICACHE_FLASH_ATTR bmx280Init( struct bmx280data* d )
     d->h6 = 0;
    }
   //os_printf("BMX280 calibration values: T1=%u, T2=%d, T3=%d, P1=%u, P2=%d, P3=%d, P4=%d, P5=%d, P6=%d, P7=%d, P8=%d, P9=%d, H1=%u, H2=%d, H3=%u, H4=%d, H5=%d, H6=%d\nBMX280 sensor type: %u\n", d->t1, d->t2, d->t3, d->p1, d->p2, d->p3, d->p4, d->p5, d->p6, d->p7, d->p8, d->p9, d->h1, d->h2, d->h3, d->h4, d->h5, d->h6, d->sensor_type );
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 
@@ -87,9 +88,9 @@ int ICACHE_FLASH_ATTR bmx280Read( struct bmx280data* d )
   // Force read, Oversampling: osrs_t 1x, osrs_p 1x, osrs_h 1x
   if(d->sensor_type==TYPE_BME280)
    {
-    if(i2cWriteRegister8(BMX280_ADDR, BMX280_CTRL_HUM, 0x01)!=0) return -1;
+    if(i2cWriteRegister8(BMX280_ADDR, BMX280_CTRL_HUM, 0x01)!=0) return SENSOR_RTN_FAILED;
    }
-  if(i2cWriteRegister8(BMX280_ADDR, BMX280_CTRL, 0x25)!=0) return -1;
+  if(i2cWriteRegister8(BMX280_ADDR, BMX280_CTRL, 0x25)!=0) return SENSOR_RTN_FAILED;
   // Wait until measurement is completed
   os_delay_us(8000);
   // Read uncompensated temperature value
@@ -110,7 +111,7 @@ int ICACHE_FLASH_ATTR bmx280Read( struct bmx280data* d )
     d->humidity = 0;
    }
   os_printf("BMX280 t=%d p=%d h=%d\n", d->temperature, d->pressure, d->humidity);
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 

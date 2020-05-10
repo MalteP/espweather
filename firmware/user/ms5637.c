@@ -22,6 +22,7 @@
 
 #include <esp8266.h>
 #include "i2c-common.h"
+#include "sensor-common.h"
 #include "ms5637.h"
 
 
@@ -29,7 +30,7 @@
 int ICACHE_FLASH_ATTR msInit( struct msdata* d )
  {
   i2cInit();
-  if(i2cWriteCmd(MS5637_ADDR, MS5637_RESET, I2C_SEND_STOP)!=0) return -1; // Reset sensor
+  if(i2cWriteCmd(MS5637_ADDR, MS5637_RESET, I2C_SEND_STOP)!=0) return SENSOR_RTN_FAILED; // Reset sensor
   // Read calibration data
   #ifdef MS5637_ENABLE_CRC_CHECK
   d->c[0] = i2cReadRegister16(MS5637_ADDR, MS5637_PROM_READ|0x00);
@@ -47,11 +48,11 @@ int ICACHE_FLASH_ATTR msInit( struct msdata* d )
   if(msCheckCRC(&d->c[0])!=((d->c[0]>>12)&0x000F))
    {
     os_printf("MS5637: checksum mismatch\n");
-    return -1;
+    return SENSOR_RTN_FAILED;
    }
   #endif
   //os_printf("MS5637 calibration values: C1=%u, C2=%u, C3=%u, C4=%u, C5=%u, C6=%u\n", d->c[1], d->c[2], d->c[3], d->c[4], d->c[5], d->c[6] );
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 
@@ -64,12 +65,12 @@ int ICACHE_FLASH_ATTR msRead( struct msdata* d )
   int64_t t2, off2, sens2;
   #endif
   // Read D1: uncompensated digital pressure value
-  if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D1|MS5637_OSR_PRES, I2C_SEND_STOP)!=0) return -1;
+  if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D1|MS5637_OSR_PRES, I2C_SEND_STOP)!=0) return SENSOR_RTN_FAILED;
   os_delay_us(540);
   os_delay_us(540<<MS5637_OS_PRES);
   d->d1 = i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
   // Read D2: digital temperature value
-  if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D2|MS5637_OSR_TEMP, I2C_SEND_STOP)!=0) return -1;
+  if(i2cWriteCmd(MS5637_ADDR, MS5637_CONVERT_D2|MS5637_OSR_TEMP, I2C_SEND_STOP)!=0) return SENSOR_RTN_FAILED;
   os_delay_us(540);
   os_delay_us(540<<MS5637_OS_TEMP);
   d->d2 = i2cReadRegister24(MS5637_ADDR, MS5637_ADC_READ);
@@ -107,7 +108,7 @@ int ICACHE_FLASH_ATTR msRead( struct msdata* d )
   #endif
   d->pressure = ((uint64_t) d->d1 * sens / (1LL<<21) - off) / (1LL << 15);
   os_printf("MS5637: t=%d, p=%d\n", d->temperature, d->pressure);
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 

@@ -22,6 +22,7 @@
 
 #include <esp8266.h>
 #include "i2c-common.h"
+#include "sensor-common.h"
 #include "sht3x.h"
 
 
@@ -34,8 +35,8 @@ int ICACHE_FLASH_ATTR sht3Init( struct sht3data* d )
   // Initialize I2C
   i2cInit();
   // Reset sensor
-  if(i2cWriteRegister8(SHT3x_ADDR, SHT3x_SRESET_MSB, SHT3x_SRESET_LSB)!=0) return -1;
-  return 0;
+  if(i2cWriteRegister8(SHT3x_ADDR, SHT3x_SRESET_MSB, SHT3x_SRESET_LSB)!=0) return SENSOR_RTN_FAILED;
+  return SENSOR_RTN_OK;
  }
 
 // Read temperature & humidity
@@ -47,7 +48,7 @@ int ICACHE_FLASH_ATTR sht3Read( struct sht3data* d )
   uint8_t temperature_crc, humidity_crc;
   #endif
   // Start conversion
-  if(i2cWriteRegister8(SHT3x_ADDR, SHT3x_MS_HIGH_MSB, SHT3x_MS_HIGH_LSB)!=0) return -1;
+  if(i2cWriteRegister8(SHT3x_ADDR, SHT3x_MS_HIGH_MSB, SHT3x_MS_HIGH_LSB)!=0) return SENSOR_RTN_FAILED;
   // Wait until measurement is finished
   while(1)
    {
@@ -59,7 +60,7 @@ int ICACHE_FLASH_ATTR sht3Read( struct sht3data* d )
       os_delay_us(1000);
       if(--sht_wait==0)
        {
-        return -1;
+        return SENSOR_RTN_FAILED;
        }
      } else {
       // Got ACK, measurement completed
@@ -81,7 +82,7 @@ int ICACHE_FLASH_ATTR sht3Read( struct sht3data* d )
   if(temperature_crc!=sht3CalculateCRC(0xFF, temperature)||humidity_crc!=sht3CalculateCRC(0xFF, humidity))
    {
     os_printf("SHT3x: checksum mismatch\n");
-    return -1;
+    return SENSOR_RTN_FAILED;
    }
   #endif
   // Calculate compensated temperature and humidity
@@ -90,7 +91,7 @@ int ICACHE_FLASH_ATTR sht3Read( struct sht3data* d )
   // RH = 100 * SRH / 2^16     | *100 -> RH = 625 * SRH / 2^12
   d->humidity = (625*(unsigned int)humidity)>>12;
   os_printf("SHT3x t=%d, h=%d\n", d->temperature, d->humidity);
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 #ifdef SHT3_USE_CRC

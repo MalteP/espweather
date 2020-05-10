@@ -21,6 +21,7 @@
 // #############################################################################
 
 #include <esp8266.h>
+#include "sensor-common.h"
 #include "dht22.h"
 
 int dht22delay = 0;
@@ -43,7 +44,7 @@ int ICACHE_FLASH_ATTR dht22Init( struct dhtdata* d )
   os_timer_disarm(&dht22Timer);
   os_timer_setfn(&dht22Timer, dht22TimerCb, NULL);
   os_timer_arm(&dht22Timer, DHT22_READ_DELAY_MS, 0);
-  return 0;
+  return SENSOR_RTN_OK;
  }
 
 
@@ -61,8 +62,8 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
   unsigned int bitctr = 255;
   uint8_t chksum = 0;
 
-  // Initial read delay, sensor not ready
-  if(dht22delay>0) return -1;
+  // Initial read delay, sensor not yet ready
+  if(dht22delay>0) return SENSOR_RTN_FAILED;
 
   // Reset data
   for(i=0; i<5; i++)
@@ -159,8 +160,8 @@ int ICACHE_FLASH_ATTR dht22Read( struct dhtdata* d )
     os_printf("Communication error, %d bits received.\n", bitctr);
    }
 
-  return -1;
+  return SENSOR_RTN_FAILED;
 
   endfunction:
-  return 0;
+  return SENSOR_RTN_OK;
  }

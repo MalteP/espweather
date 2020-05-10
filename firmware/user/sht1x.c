@@ -21,13 +21,14 @@
 // #############################################################################
 
 #include <esp8266.h>
+#include "sensor-common.h"
 #include "sht1x.h" 
 
 
 // Initialize sensor
 int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
  {
-  int rtn = -1;
+  int rtn = SENSOR_RTN_FAILED;
   uint16_t status;
   uint8_t crc_calc;
 
@@ -66,7 +67,7 @@ int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
   if(shtReadAck()!=0) goto endfunction;
   shtRead16();
   shtSendAck();
-  rtn = 0;
+  rtn = SENSOR_RTN_OK;
 
   endfunction:
 
@@ -80,7 +81,7 @@ int ICACHE_FLASH_ATTR shtInit( struct shtdata* d )
 // Read temperature & humidity
 int ICACHE_FLASH_ATTR shtRead( struct shtdata* d )
  {
-  int rtn = -1;
+  int rtn = SENSOR_RTN_FAILED;
   uint16_t t, h;
   uint8_t temp;
   #ifdef SHT_USE_CRC
@@ -133,7 +134,7 @@ int ICACHE_FLASH_ATTR shtRead( struct shtdata* d )
   // Done.
   //os_printf("SHT1x tRaw=%d, hRaw=%d", t, h);
   os_printf("SHT1x: t=%d, h=%d\n", d->temperature, d->humidity);
-  rtn=0;
+  rtn=SENSOR_RTN_OK;
   endfunction:
   // Reset port
   SHT_CLK_HIGH();
